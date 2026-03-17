@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Arquivos - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <span class="navbar-logo"></span>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Gerenciador de Arquivos</h1>
+                <div class="d-flex">
+                    <button class="btn btn-outline-primary me-2" id="btn-conectar-drive">
+                        <i class="fab fa-google-drive me-2"></i>Conectar ao Google Drive
+                    </button>
+                    <button class="btn btn-primary" id="btn-upload" data-bs-toggle="modal" data-bs-target="#modalUpload">
+                        <i class="fas fa-upload me-2"></i>Upload de Arquivo
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Pastas</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush" id="lista-pastas">
+                                <a href="#" class="list-group-item list-group-item-action active" data-pasta="todos">
+                                    <i class="fas fa-folder me-2"></i>Todos os Arquivos
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" data-pasta="musicas">
+                                    <i class="fas fa-music me-2"></i>Músicas
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" data-pasta="partituras">
+                                    <i class="fas fa-file-pdf me-2"></i>Partituras
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" data-pasta="estudos">
+                                    <i class="fas fa-book me-2"></i>Estudos Bíblicos
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" data-pasta="apresentacoes">
+                                    <i class="fas fa-file-powerpoint me-2"></i>Apresentações
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" data-pasta="imagens">
+                                    <i class="fas fa-image me-2"></i>Imagens
+                                </a>
+                            </div>
+                            <div class="p-3">
+                                <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#modalNovaPasta">
+                                    <i class="fas fa-folder-plus me-2"></i>Nova Pasta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-9">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0" id="pasta-atual">Todos os Arquivos</h5>
+                                <div class="input-group" style="max-width: 300px;">
+                                    <input type="text" class="form-control" placeholder="Pesquisar arquivos..." id="pesquisar-arquivos">
+                                    <button class="btn btn-outline-secondary" type="button" id="btn-pesquisar">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="arquivos-loading" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                                <p class="mt-3">Carregando arquivos...</p>
+                            </div>
+                            
+                            <div id="arquivos-lista" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 40px;"></th>
+                                                <th>Nome</th>
+                                                <th>Tipo</th>
+                                                <th>Tamanho</th>
+                                                <th>Modificado</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabela-arquivos">
+                                            <!-- Será preenchido via JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="arquivos-vazio" class="alert alert-info" style="display: none;">
+                                <i class="fas fa-info-circle me-2"></i>Nenhum arquivo encontrado nesta pasta.
+                            </div>
+                            
+                            <div id="arquivos-erro" class="alert alert-danger" style="display: none;">
+                                <i class="fas fa-exclamation-circle me-2"></i>Ocorreu um erro ao carregar os arquivos. Por favor, tente novamente.
+                            </div>
+                            
+                            <div id="drive-desconectado" class="text-center py-5">
+                                <i class="fab fa-google-drive fa-4x text-muted mb-3"></i>
+                                <h3>Google Drive não conectado</h3>
+                                <p class="text-muted">Conecte sua conta do Google Drive para gerenciar seus arquivos.</p>
+                                <button class="btn btn-primary mt-3" id="btn-conectar-drive-2">
+                                    <i class="fab fa-google me-2"></i>Conectar ao Google Drive
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Arquivos Recentes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="arquivos-recentes">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Upload -->
+    <div class="modal fade" id="modalUpload" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload de Arquivo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-dropzone" id="dropzone-upload">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h4>Arraste e solte arquivos aqui</h4>
+                        <p>ou</p>
+                        <label for="file-input" class="btn btn-outline-primary">Selecionar Arquivos</label>
+                        <input type="file" id="file-input" multiple style="display: none;">
+                    </div>
+                    
+                    <div class="upload-file-list mt-4" id="upload-preview">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="mb-3">
+                            <label for="upload-pasta" class="form-label">Pasta de Destino</label>
+                            <select class="form-select" id="upload-pasta">
+                                <option value="todos">Raiz</option>
+                                <option value="musicas">Músicas</option>
+                                <option value="partituras">Partituras</option>
+                                <option value="estudos">Estudos Bíblicos</option>
+                                <option value="apresentacoes">Apresentações</option>
+                                <option value="imagens">Imagens</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="upload-permissao" class="form-label">Permissões</label>
+                            <select class="form-select" id="upload-permissao">
+                                <option value="todos">Visível para todos</option>
+                                <option value="ministerio">Apenas para meu ministério</option>
+                                <option value="lideres">Apenas para líderes</option>
+                                <option value="privado">Privado (apenas eu)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-iniciar-upload">Fazer Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nova Pasta -->
+    <div class="modal fade" id="modalNovaPasta" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nova Pasta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="pasta-nome" class="form-label">Nome da Pasta</label>
+                        <input type="text" class="form-control" id="pasta-nome" placeholder="Ex: Ensaios 2025" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pasta-pai" class="form-label">Pasta Principal</label>
+                        <select class="form-select" id="pasta-pai">
+                            <option value="todos">Raiz</option>
+                            <option value="musicas">Músicas</option>
+                            <option value="partituras">Partituras</option>
+                            <option value="estudos">Estudos Bíblicos</option>
+                            <option value="apresentacoes">Apresentações</option>
+                            <option value="imagens">Imagens</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pasta-permissao" class="form-label">Permissões</label>
+                        <select class="form-select" id="pasta-permissao">
+                            <option value="todos">Visível para todos</option>
+                            <option value="ministerio">Apenas para meu ministério</option>
+                            <option value="lideres">Apenas para líderes</option>
+                            <option value="privado">Privado (apenas eu)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-criar-pasta">Criar Pasta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Compartilhar -->
+    <div class="modal fade" id="modalCompartilhar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Compartilhar Arquivo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Arquivo</label>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-pdf fa-2x text-danger me-3" id="compartilhar-icone"></i>
+                            <span id="compartilhar-nome">documento.pdf</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="compartilhar-permissao" class="form-label">Permissões</label>
+                        <select class="form-select" id="compartilhar-permissao">
+                            <option value="todos">Visível para todos</option>
+                            <option value="ministerio">Apenas para meu ministério</option>
+                            <option value="lideres">Apenas para líderes</option>
+                            <option value="privado">Privado (apenas eu)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Link para compartilhamento</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="compartilhar-link" value="https://drive.google.com/file/d/1234567890/view?usp=sharing" readonly>
+                            <button class="btn btn-outline-primary" type="button" id="btn-copiar-link">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Compartilhar via</label>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary" id="btn-compartilhar-whatsapp">
+                                <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                            </button>
+                            <button class="btn btn-outline-primary" id="btn-compartilhar-email">
+                                <i class="fas fa-envelope me-1"></i> Email
+                            </button>
+                            <button class="btn btn-outline-primary" id="btn-compartilhar-telegram">
+                                <i class="fab fa-telegram me-1"></i> Telegram
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-compartilhamento">Salvar Permissões</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Visualizar -->
+    <div class="modal fade" id="modalVisualizar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="visualizar-nome">documento.pdf</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <iframe id="visualizar-iframe" style="width: 100%; height: 80vh; border: none;"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-primary" id="visualizar-download" download>
+                        <i class="fas fa-download me-2"></i>Download
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <script src="../js/sidebar-loader.js"></script>
+    
+    <script>
+        // Dados de arquivos
+        let arquivos = [];
+        let arquivoSelecionado = null;
+        let arquivosParaUpload = [];
+        let driveConectado = false;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar login
+            const usuario = verificarLogin();
+            
+            if (!usuario) return;
+            
+            // Verificar permissões (usar perfil normalizado)
+            const perfil = usuario.tipoPerfil || usuario.perfil || (window.usuarioAtual ? (window.usuarioAtual.tipoPerfil || window.usuarioAtual.perfil) : null);
+            if (perfil !== 'pastor' && perfil !== 'admin') {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            // Configurar sidebar mobile
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            if (sidebarToggleBtn) {
+                sidebarToggleBtn.addEventListener('click', function() {
+                    document.querySelector('.sidebar').classList.toggle('show');
+                });
+            }
+            
+            // Configurar eventos
+            document.getElementById('btn-conectar-drive').addEventListener('click', conectarGoogleDrive);
+            document.getElementById('btn-conectar-drive-2').addEventListener('click', conectarGoogleDrive);
+            document.getElementById('btn-pesquisar').addEventListener('click', pesquisarArquivos);
+            document.getElementById('pesquisar-arquivos').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    pesquisarArquivos();
+                }
+            });
+            
+            // Configurar eventos das pastas
+            document.querySelectorAll('#lista-pastas a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Atualizar pasta ativa
+                    document.querySelectorAll('#lista-pastas a').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Carregar arquivos da pasta
+                    const pasta = this.dataset.pasta;
+                    document.getElementById('pasta-atual').textContent = this.textContent.trim();
+                    carregarArquivos(pasta);
+                });
+            });
+            
+            // Configurar eventos de upload
+            const dropzone = document.getElementById('dropzone-upload');
+            const fileInput = document.getElementById('file-input');
+            
+            dropzone.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            dropzone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropzone.classList.add('bg-light');
+            });
+            
+            dropzone.addEventListener('dragleave', function() {
+                dropzone.classList.remove('bg-light');
+            });
+            
+            dropzone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropzone.classList.remove('bg-light');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    handleFiles(this.files);
+                }
+            });
+            
+            document.getElementById('btn-iniciar-upload').addEventListener('click', iniciarUpload);
+            document.getElementById('btn-criar-pasta').addEventListener('click', criarNovaPasta);
+            document.getElementById('btn-copiar-link').addEventListener('click', copiarLinkCompartilhamento);
+            document.getElementById('btn-salvar-compartilhamento').addEventListener('click', salvarCompartilhamento);
+            
+            // Configurar botões de compartilhamento
+            document.getElementById('btn-compartilhar-whatsapp').addEventListener('click', () => compartilharVia('whatsapp'));
+            document.getElementById('btn-compartilhar-email').addEventListener('click', () => compartilharVia('email'));
+            document.getElementById('btn-compartilhar-telegram').addEventListener('click', () => compartilharVia('telegram'));
+            
+            // Verificar se o Google Drive está conectado
+            verificarConexaoDrive();
+        });
+        
+        // Função para verificar conexão com o Google Drive
+        function verificarConexaoDrive() {
+            // Em uma implementação real, aqui seria verificado se o usuário já autorizou o acesso ao Google Drive
+            // Para esta demonstração, vamos simular que não está conectado inicialmente
+            
+            driveConectado = false;
+            
+            if (driveConectado) {
+                document.getElementById('drive-desconectado').style.display = 'none';
+                carregarArquivos('todos');
+            } else {
+                document.getElementById('arquivos-loading').style.display = 'none';
+                document.getElementById('drive-desconectado').style.display = 'block';
+            }
+        }
+        
+        // Função para conectar ao Google Drive
+        async function conectarGoogleDrive() {
+            try {
+                // Em uma implementação real, aqui seria feita a autenticação OAuth com o Google
+                // Para esta demonstração, vamos simular uma conexão bem-sucedida
+                
+                document.getElementById('drive-desconectado').style.display = 'none';
+                document.getElementById('arquivos-loading').style.display = 'block';
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                driveConectado = true;
+                
+                // Carregar arquivos
+                carregarArquivos('todos');
+                
+                // Carregar arquivos recentes
+                carregarArquivosRecentes();
+                
+                // Mostrar mensagem de sucesso
+                alert('Conectado ao Google Drive com sucesso!');
+            } catch (error) {
+                console.error('Erro ao conectar ao Google Drive:', error);
+                alert('Ocorreu um erro ao conectar ao Google Drive. Por favor, tente novamente.');
+                
+                document.getElementById('arquivos-loading').style.display = 'none';
+                document.getElementById('drive-desconectado').style.display = 'block';
+            }
+        }
+        
+        // Função para carregar arquivos
+        async function carregarArquivos(pasta) {
+            if (!driveConectado) {
+                document.getElementById('arquivos-loading').style.display = 'none';
+                document.getElementById('drive-desconectado').style.display = 'block';
+                return;
+            }
+            
+            // Mostrar loading
+            document.getElementById('arquivos-loading').style.display = 'block';
+            document.getElementById('arquivos-lista').style.display = 'none';
+            document.getElementById('arquivos-vazio').style.display = 'none';
+            document.getElementById('arquivos-erro').style.display = 'none';
+            
+            try {
+                // Em uma implementação real, aqui seria feita uma chamada à API do Google Drive
+                // Para esta demonstração, vamos simular uma resposta
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Simular resposta da API
+                if (pasta === 'todos') {
+                    arquivos = [
+                        {
+                            id: '1',
+                            nome: 'Escala Junho 2025.pdf',
+                            tipo: 'pdf',
+                            tamanho: '245 KB',
+                            modificado: '25/05/2025',
+                            pasta: 'todos',
+                            url: 'https://drive.google.com/file/d/1/view',
+                            permissao: 'todos'
+                        },
+                        {
+                            id: '2',
+                            nome: 'Grande é o Senhor.docx',
+                            tipo: 'docx',
+                            tamanho: '35 KB',
+                            modificado: '20/05/2025',
+                            pasta: 'musicas',
+                            url: 'https://drive.google.com/file/d/2/view',
+                            permissao: 'todos'
+                        },
+                        {
+                            id: '3',
+                            nome: 'Estudo Bíblico - Tiago.pptx',
+                            tipo: 'pptx',
+                            tamanho: '1.2 MB',
+                            modificado: '18/05/2025',
+                            pasta: 'estudos',
+                            url: 'https://drive.google.com/file/d/3/view',
+                            permissao: 'lideres'
+                        },
+                        {
+                            id: '4',
+                            nome: 'Logo Igreja.png',
+                            tipo: 'png',
+                            tamanho: '450 KB',
+                            modificado: '15/05/2025',
+                            pasta: 'imagens',
+                            url: 'https://drive.google.com/file/d/4/view',
+                            permissao: 'todos'
+                        },
+                        {
+                            id: '5',
+                            nome: 'Partitura - Quão Grande é o Meu Deus.pdf',
+                            tipo: 'pdf',
+                            tamanho: '320 KB',
+                            modificado: '12/05/2025',
+                            pasta: 'partituras',
+                            url: 'https://drive.google.com/file/d/5/view',
+                            permissao: 'ministerio'
+                        }
+                    ];
+                } else if (pasta === 'musicas') {
+                    arquivos = [
+                        {
+                            id: '2',
+                            nome: 'Grande é o Senhor.docx',
+                            tipo: 'docx',
+                            tamanho: '35 KB',
+                            modificado: '20/05/2025',
+                            pasta: 'musicas',
+                            url: 'https://drive.google.com/file/d/2/view',
+                            permissao: 'todos'
+                        },
+                        {
+                            id: '6',
+                            nome: 'Quão Grande é o Meu Deus.docx',
+                            tipo: 'docx',
+                            tamanho: '42 KB',
+                            modificado: '10/05/2025',
+                            pasta: 'musicas',
+                            url: 'https://drive.google.com/file/d/6/view',
+                            permissao: 'todos'
+                        },
+                        {
+                            id: '7',
+                            nome: 'Consagração.docx',
+                            tipo: 'docx',
+                            tamanho: '38 KB',
+                            modificado: '05/05/2025',
+                            pasta: 'musicas',
+                            url: 'https://drive.google.com/file/d/7/view',
+                            permissao: 'todos'
+                        }
+                    ];
+                } else if (pasta === 'partituras') {
+                    arquivos = [
+                        {
+                            id: '5',
+                            nome: 'Partitura - Quão Grande é o Meu Deus.pdf',
+                            tipo: 'pdf',
+                            tamanho: '320 KB',
+                            modificado: '12/05/2025',
+                            pasta: 'partituras',
+                            url: 'https://drive.google.com/file/d/5/view',
+                            permissao: 'ministerio'
+                        },
+                        {
+                            id: '8',
+                            nome: 'Partitura - Grande é o Senhor.pdf',
+                            tipo: 'pdf',
+                            tamanho: '280 KB',
+                            modificado: '08/05/2025',
+                            pasta: 'partituras',
+                            url: 'https://drive.google.com/file/d/8/view',
+                            permissao: 'ministerio'
+                        }
+                    ];
+                } else if (pasta === 'estudos') {
+                    arquivos = [
+                        {
+                            id: '3',
+                            nome: 'Estudo Bíblico - Tiago.pptx',
+                            tipo: 'pptx',
+                            tamanho: '1.2 MB',
+                            modificado: '18/05/2025',
+                            pasta: 'estudos',
+                            url: 'https://drive.google.com/file/d/3/view',
+                            permissao: 'lideres'
+                        },
+                        {
+                            id: '9',
+                            nome: 'Estudo Bíblico - Romanos.pptx',
+                            tipo: 'pptx',
+                            tamanho: '1.5 MB',
+                            modificado: '01/05/2025',
+                            pasta: 'estudos',
+                            url: 'https://drive.google.com/file/d/9/view',
+                            permissao: 'lideres'
+                        }
+                    ];
+                } else if (pasta === 'imagens') {
+                    arquivos = [
+                        {
+                            id: '4',
+                            nome: 'Logo Igreja.png',
+                            tipo: 'png',
+                            tamanho: '450 KB',
+                            modificado: '15/05/2025',
+                            pasta: 'imagens',
+                            url: 'https://drive.google.com/file/d/4/view',
+                            permissao: 'todos'
+                        },
+                        {
+                            id: '10',
+                            nome: 'Banner Culto.jpg',
+                            tipo: 'jpg',
+                            tamanho: '850 KB',
+                            modificado: '10/05/2025',
+                            pasta: 'imagens',
+                            url: 'https://drive.google.com/file/d/10/view',
+                            permissao: 'todos'
+                        }
+                    ];
+                } else {
+                    arquivos = [];
+                }
+                
+                // Verificar se há arquivos
+                if (arquivos.length === 0) {
+                    document.getElementById('arquivos-loading').style.display = 'none';
+                    document.getElementById('arquivos-vazio').style.display = 'block';
+                    return;
+                }
+                
+                // Preencher tabela de arquivos
+                const tabelaArquivos = document.getElementById('tabela-arquivos');
+                tabelaArquivos.innerHTML = '';
+                
+                arquivos.forEach(arquivo => {
+                    const row = document.createElement('tr');
+                    
+                    // Determinar ícone baseado no tipo
+                    let icone = 'fa-file';
+                    let iconeCor = 'text-secondary';
+                    
+                    switch (arquivo.tipo) {
+                        case 'pdf': 
+                            icone = 'fa-file-pdf'; 
+                            iconeCor = 'text-danger';
+                            break;
+                        case 'docx': 
+                            icone = 'fa-file-word'; 
+                            iconeCor = 'text-primary';
+                            break;
+                        case 'xlsx': 
+                            icone = 'fa-file-excel'; 
+                            iconeCor = 'text-success';
+                            break;
+                        case 'pptx': 
+                            icone = 'fa-file-powerpoint'; 
+                            iconeCor = 'text-warning';
+                            break;
+                        case 'jpg':
+                        case 'png':
+                        case 'gif': 
+                            icone = 'fa-file-image'; 
+                            iconeCor = 'text-info';
+                            break;
+                        case 'mp3':
+                        case 'wav': 
+                            icone = 'fa-file-audio'; 
+                            iconeCor = 'text-primary';
+                            break;
+                        case 'mp4': 
+                            icone = 'fa-file-video'; 
+                            iconeCor = 'text-danger';
+                            break;
+                    }
+                    
+                    row.innerHTML = `
+                        <td><i class="fas ${icone} fa-lg ${iconeCor}"></i></td>
+                        <td>${arquivo.nome}</td>
+                        <td>${arquivo.tipo.toUpperCase()}</td>
+                        <td>${arquivo.tamanho}</td>
+                        <td>${arquivo.modificado}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary visualizar-arquivo" data-id="${arquivo.id}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success compartilhar-arquivo" data-id="${arquivo.id}">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger excluir-arquivo" data-id="${arquivo.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    
+                    tabelaArquivos.appendChild(row);
+                });
+                
+                // Configurar eventos dos botões
+                document.querySelectorAll('.visualizar-arquivo').forEach(btn => {
+                    btn.addEventListener('click', () => visualizarArquivo(btn.dataset.id));
+                });
+                
+                document.querySelectorAll('.compartilhar-arquivo').forEach(btn => {
+                    btn.addEventListener('click', () => compartilharArquivo(btn.dataset.id));
+                });
+                
+                document.querySelectorAll('.excluir-arquivo').forEach(btn => {
+                    btn.addEventListener('click', () => excluirArquivo(btn.dataset.id));
+                });
+                
+                // Mostrar lista
+                document.getElementById('arquivos-loading').style.display = 'none';
+                document.getElementById('arquivos-lista').style.display = 'block';
+            } catch (error) {
+                console.error('Erro ao carregar arquivos:', error);
+                document.getElementById('arquivos-loading').style.display = 'none';
+                document.getElementById('arquivos-erro').style.display = 'block';
+            }
+        }
+        
+        // Função para carregar arquivos recentes
+        async function carregarArquivosRecentes() {
+            try {
+                // Em uma implementação real, aqui seria feita uma chamada à API do Google Drive
+                // Para esta demonstração, vamos simular uma resposta
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Simular resposta da API
+                const arquivosRecentes = [
+                    {
+                        id: '1',
+                        nome: 'Escala Junho 2025.pdf',
+                        tipo: 'pdf',
+                        url: 'https://drive.google.com/file/d/1/view'
+                    },
+                    {
+                        id: '2',
+                        nome: 'Grande é o Senhor.docx',
+                        tipo: 'docx',
+                        url: 'https://drive.google.com/file/d/2/view'
+                    },
+                    {
+                        id: '3',
+                        nome: 'Estudo Bíblico - Tiago.pptx',
+                        tipo: 'pptx',
+                        url: 'https://drive.google.com/file/d/3/view'
+                    },
+                    {
+                        id: '4',
+                        nome: 'Logo Igreja.png',
+                        tipo: 'png',
+                        url: 'https://drive.google.com/file/d/4/view'
+                    }
+                ];
+                
+                // Preencher lista de arquivos recentes
+                const arquivosRecentesContainer = document.getElementById('arquivos-recentes');
+                arquivosRecentesContainer.innerHTML = '';
+                
+                arquivosRecentes.forEach(arquivo => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3 mb-3';
+                    
+                    // Determinar ícone baseado no tipo
+                    let icone = 'fa-file';
+                    let iconeCor = 'text-secondary';
+                    
+                    switch (arquivo.tipo) {
+                        case 'pdf': 
+                            icone = 'fa-file-pdf'; 
+                            iconeCor = 'text-danger';
+                            break;
+                        case 'docx': 
+                            icone = 'fa-file-word'; 
+                            iconeCor = 'text-primary';
+                            break;
+                        case 'xlsx': 
+                            icone = 'fa-file-excel'; 
+                            iconeCor = 'text-success';
+                            break;
+                        case 'pptx': 
+                            icone = 'fa-file-powerpoint'; 
+                            iconeCor = 'text-warning';
+                            break;
+                        case 'jpg':
+                        case 'png':
+                        case 'gif': 
+                            icone = 'fa-file-image'; 
+                            iconeCor = 'text-info';
+                            break;
+                        case 'mp3':
+                        case 'wav': 
+                            icone = 'fa-file-audio'; 
+                            iconeCor = 'text-primary';
+                            break;
+                        case 'mp4': 
+                            icone = 'fa-file-video'; 
+                            iconeCor = 'text-danger';
+                            break;
+                    }
+                    
+                    col.innerHTML = `
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas ${icone} fa-3x ${iconeCor} mb-3"></i>
+                                <h6 class="card-title">${arquivo.nome}</h6>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <button class="btn btn-sm btn-outline-primary w-100 visualizar-arquivo-recente" data-id="${arquivo.id}">
+                                    <i class="fas fa-eye me-1"></i>Visualizar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    arquivosRecentesContainer.appendChild(col);
+                });
+                
+                // Configurar eventos dos botões
+                document.querySelectorAll('.visualizar-arquivo-recente').forEach(btn => {
+                    btn.addEventListener('click', () => visualizarArquivo(btn.dataset.id));
+                });
+            } catch (error) {
+                console.error('Erro ao carregar arquivos recentes:', error);
+            }
+        }
+        
+        // Função para pesquisar arquivos
+        function pesquisarArquivos() {
+            const termo = document.getElementById('pesquisar-arquivos').value.trim().toLowerCase();
+            
+            if (!termo) {
+                // Se não houver termo de pesquisa, recarregar a pasta atual
+                const pastaAtual = document.querySelector('#lista-pastas a.active').dataset.pasta;
+                carregarArquivos(pastaAtual);
+                return;
+            }
+            
+            // Filtrar arquivos pelo termo de pesquisa
+            const arquivosFiltrados = arquivos.filter(arquivo => 
+                arquivo.nome.toLowerCase().includes(termo) || 
+                arquivo.tipo.toLowerCase().includes(termo)
+            );
+            
+            // Atualizar título
+            document.getElementById('pasta-atual').textContent = `Resultados para "${termo}"`;
+            
+            // Verificar se há arquivos
+            if (arquivosFiltrados.length === 0) {
+                document.getElementById('arquivos-loading').style.display = 'none';
+                document.getElementById('arquivos-lista').style.display = 'none';
+                document.getElementById('arquivos-vazio').style.display = 'block';
+                document.getElementById('arquivos-vazio').innerHTML = `
+                    <i class="fas fa-info-circle me-2"></i>Nenhum arquivo encontrado para "${termo}".
+                `;
+                return;
+            }
+            
+            // Preencher tabela de arquivos
+            const tabelaArquivos = document.getElementById('tabela-arquivos');
+            tabelaArquivos.innerHTML = '';
+            
+            arquivosFiltrados.forEach(arquivo => {
+                const row = document.createElement('tr');
+                
+                // Determinar ícone baseado no tipo
+                let icone = 'fa-file';
+                let iconeCor = 'text-secondary';
+                
+                switch (arquivo.tipo) {
+                    case 'pdf': 
+                        icone = 'fa-file-pdf'; 
+                        iconeCor = 'text-danger';
+                        break;
+                    case 'docx': 
+                        icone = 'fa-file-word'; 
+                        iconeCor = 'text-primary';
+                        break;
+                    case 'xlsx': 
+                        icone = 'fa-file-excel'; 
+                        iconeCor = 'text-success';
+                        break;
+                    case 'pptx': 
+                        icone = 'fa-file-powerpoint'; 
+                        iconeCor = 'text-warning';
+                        break;
+                    case 'jpg':
+                    case 'png':
+                    case 'gif': 
+                        icone = 'fa-file-image'; 
+                        iconeCor = 'text-info';
+                        break;
+                    case 'mp3':
+                    case 'wav': 
+                        icone = 'fa-file-audio'; 
+                        iconeCor = 'text-primary';
+                        break;
+                    case 'mp4': 
+                        icone = 'fa-file-video'; 
+                        iconeCor = 'text-danger';
+                        break;
+                }
+                
+                row.innerHTML = `
+                    <td><i class="fas ${icone} fa-lg ${iconeCor}"></i></td>
+                    <td>${arquivo.nome}</td>
+                    <td>${arquivo.tipo.toUpperCase()}</td>
+                    <td>${arquivo.tamanho}</td>
+                    <td>${arquivo.modificado}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary visualizar-arquivo" data-id="${arquivo.id}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success compartilhar-arquivo" data-id="${arquivo.id}">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger excluir-arquivo" data-id="${arquivo.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tabelaArquivos.appendChild(row);
+            });
+            
+            // Configurar eventos dos botões
+            document.querySelectorAll('.visualizar-arquivo').forEach(btn => {
+                btn.addEventListener('click', () => visualizarArquivo(btn.dataset.id));
+            });
+            
+            document.querySelectorAll('.compartilhar-arquivo').forEach(btn => {
+                btn.addEventListener('click', () => compartilharArquivo(btn.dataset.id));
+            });
+            
+            document.querySelectorAll('.excluir-arquivo').forEach(btn => {
+                btn.addEventListener('click', () => excluirArquivo(btn.dataset.id));
+            });
+            
+            // Mostrar lista
+            document.getElementById('arquivos-loading').style.display = 'none';
+            document.getElementById('arquivos-lista').style.display = 'block';
+        }
+        
+        // Função para visualizar arquivo
+        function visualizarArquivo(id) {
+            const arquivo = arquivos.find(a => a.id === id);
+            
+            if (!arquivo) return;
+            
+            // Atualizar modal
+            document.getElementById('visualizar-nome').textContent = arquivo.nome;
+            
+            // Determinar URL de visualização
+            // Em uma implementação real, aqui seria usado o URL de visualização do Google Drive
+            // Para esta demonstração, vamos simular uma visualização
+            
+            const iframe = document.getElementById('visualizar-iframe');
+            
+            // Verificar tipo de arquivo
+            if (['jpg', 'jpeg', 'png', 'gif'].includes(arquivo.tipo)) {
+                // Imagem
+                iframe.src = `data:text/html,<html><body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f0f0;"><div style="text-align:center;"><img src="https://via.placeholder.com/800x600" style="max-width:100%;max-height:80vh;box-shadow:0 0 10px rgba(0,0,0,0.2);"><p style="font-family:Arial;margin-top:20px;">Simulação de visualização de imagem: ${arquivo.nome}</p></div></body></html>`;
+            } else if (['pdf'].includes(arquivo.tipo)) {
+                // PDF
+                iframe.src = `data:text/html,<html><body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f0f0;"><div style="text-align:center;background:white;padding:20px;box-shadow:0 0 10px rgba(0,0,0,0.2);"><h1 style="font-family:Arial;color:#d00;">PDF</h1><p style="font-family:Arial;">Simulação de visualização de PDF: ${arquivo.nome}</p><div style="width:600px;height:400px;background:#f8f8f8;border:1px solid #ddd;margin:20px auto;padding:20px;text-align:left;font-family:Arial;">Conteúdo do documento PDF...</div></div></body></html>`;
+            } else if (['docx'].includes(arquivo.tipo)) {
+                // Word
+                iframe.src = `data:text/html,<html><body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f0f0;"><div style="text-align:center;background:white;padding:20px;box-shadow:0 0 10px rgba(0,0,0,0.2);"><h1 style="font-family:Arial;color:#00d;">DOCX</h1><p style="font-family:Arial;">Simulação de visualização de documento Word: ${arquivo.nome}</p><div style="width:600px;height:400px;background:#f8f8f8;border:1px solid #ddd;margin:20px auto;padding:20px;text-align:left;font-family:Arial;">Conteúdo do documento Word...</div></div></body></html>`;
+            } else if (['pptx'].includes(arquivo.tipo)) {
+                // PowerPoint
+                iframe.src = `data:text/html,<html><body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f0f0;"><div style="text-align:center;background:white;padding:20px;box-shadow:0 0 10px rgba(0,0,0,0.2);"><h1 style="font-family:Arial;color:#d70;">PPTX</h1><p style="font-family:Arial;">Simulação de visualização de apresentação PowerPoint: ${arquivo.nome}</p><div style="width:600px;height:400px;background:#f8f8f8;border:1px solid #ddd;margin:20px auto;display:flex;justify-content:center;align-items:center;font-family:Arial;font-size:24px;">Slide 1</div></div></body></html>`;
+            } else {
+                // Outros tipos
+                iframe.src = `data:text/html,<html><body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#f0f0f0;"><div style="text-align:center;background:white;padding:20px;box-shadow:0 0 10px rgba(0,0,0,0.2);"><h1 style="font-family:Arial;">Visualização não disponível</h1><p style="font-family:Arial;">O tipo de arquivo ${arquivo.tipo.toUpperCase()} não pode ser visualizado diretamente. Por favor, faça o download do arquivo.</p></div></body></html>`;
+            }
+            
+            // Atualizar link de download
+            document.getElementById('visualizar-download').href = arquivo.url;
+            document.getElementById('visualizar-download').download = arquivo.nome;
+            
+            // Abrir modal
+            const modal = new bootstrap.Modal(document.getElementById('modalVisualizar'));
+            modal.show();
+        }
+        
+        // Função para compartilhar arquivo
+        function compartilharArquivo(id) {
+            const arquivo = arquivos.find(a => a.id === id);
+            
+            if (!arquivo) return;
+            
+            // Salvar arquivo selecionado
+            arquivoSelecionado = arquivo;
+            
+            // Atualizar modal
+            document.getElementById('compartilhar-nome').textContent = arquivo.nome;
+            document.getElementById('compartilhar-permissao').value = arquivo.permissao;
+            document.getElementById('compartilhar-link').value = arquivo.url;
+            
+            // Determinar ícone baseado no tipo
+            let icone = 'fa-file';
+            let iconeCor = 'text-secondary';
+            
+            switch (arquivo.tipo) {
+                case 'pdf': 
+                    icone = 'fa-file-pdf'; 
+                    iconeCor = 'text-danger';
+                    break;
+                case 'docx': 
+                    icone = 'fa-file-word'; 
+                    iconeCor = 'text-primary';
+                    break;
+                case 'xlsx': 
+                    icone = 'fa-file-excel'; 
+                    iconeCor = 'text-success';
+                    break;
+                case 'pptx': 
+                    icone = 'fa-file-powerpoint'; 
+                    iconeCor = 'text-warning';
+                    break;
+                case 'jpg':
+                case 'png':
+                case 'gif': 
+                    icone = 'fa-file-image'; 
+                    iconeCor = 'text-info';
+                    break;
+                case 'mp3':
+                case 'wav': 
+                    icone = 'fa-file-audio'; 
+                    iconeCor = 'text-primary';
+                    break;
+                case 'mp4': 
+                    icone = 'fa-file-video'; 
+                    iconeCor = 'text-danger';
+                    break;
+            }
+            
+            document.getElementById('compartilhar-icone').className = `fas ${icone} fa-2x ${iconeCor} me-3`;
+            
+            // Abrir modal
+            const modal = new bootstrap.Modal(document.getElementById('modalCompartilhar'));
+            modal.show();
+        }
+        
+        // Função para excluir arquivo
+        async function excluirArquivo(id) {
+            if (!confirm('Tem certeza que deseja excluir este arquivo? Esta ação não pode ser desfeita.')) return;
+            
+            try {
+                // Em uma implementação real, aqui seria feita uma chamada à API do Google Drive
+                // Para esta demonstração, vamos simular uma exclusão
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Remover arquivo da lista
+                arquivos = arquivos.filter(a => a.id !== id);
+                
+                // Recarregar lista
+                const pastaAtual = document.querySelector('#lista-pastas a.active').dataset.pasta;
+                carregarArquivos(pastaAtual);
+                
+                // Mostrar mensagem de sucesso
+                alert('Arquivo excluído com sucesso!');
+            } catch (error) {
+                console.error('Erro ao excluir arquivo:', error);
+                alert('Ocorreu um erro ao excluir o arquivo. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para copiar link de compartilhamento
+        function copiarLinkCompartilhamento() {
+            const link = document.getElementById('compartilhar-link');
+            link.select();
+            document.execCommand('copy');
+            
+            // Mostrar feedback
+            const btn = document.getElementById('btn-copiar-link');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        }
+        
+        // Função para salvar compartilhamento
+        async function salvarCompartilhamento() {
+            if (!arquivoSelecionado) return;
+            
+            const permissao = document.getElementById('compartilhar-permissao').value;
+            
+            try {
+                // Em uma implementação real, aqui seria feita uma chamada à API do Google Drive
+                // Para esta demonstração, vamos simular uma atualização
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Atualizar permissão do arquivo
+                const index = arquivos.findIndex(a => a.id === arquivoSelecionado.id);
+                
+                if (index !== -1) {
+                    arquivos[index].permissao = permissao;
+                }
+                
+                // Fechar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalCompartilhar'));
+                modal.hide();
+                
+                // Mostrar mensagem de sucesso
+                alert('Permissões atualizadas com sucesso!');
+            } catch (error) {
+                console.error('Erro ao salvar compartilhamento:', error);
+                alert('Ocorreu um erro ao salvar as permissões. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para compartilhar via diferentes plataformas
+        function compartilharVia(plataforma) {
+            if (!arquivoSelecionado) return;
+            
+            const link = document.getElementById('compartilhar-link').value;
+            const titulo = arquivoSelecionado.nome;
+            
+            let url = '';
+            
+            switch (plataforma) {
+                case 'whatsapp':
+                    url = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${titulo}\n${link}`)}`;
+                    break;
+                case 'email':
+                    url = `mailto:?subject=${encodeURIComponent(titulo)}&body=${encodeURIComponent(`Confira o arquivo: ${link}`)}`;
+                    break;
+                case 'telegram':
+                    url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(titulo)}`;
+                    break;
+            }
+            
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+        
+        // Função para criar nova pasta
+        async function criarNovaPasta() {
+            // Validar formulário
+            const nome = document.getElementById('pasta-nome').value.trim();
+            
+            if (!nome) {
+                alert('Por favor, informe o nome da pasta.');
+                return;
+            }
+            
+            const pastaPai = document.getElementById('pasta-pai').value;
+            const permissao = document.getElementById('pasta-permissao').value;
+            
+            try {
+                // Em uma implementação real, aqui seria feita uma chamada à API do Google Drive
+                // Para esta demonstração, vamos simular uma criação
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Fechar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNovaPasta'));
+                modal.hide();
+                
+                // Limpar formulário
+                document.getElementById('pasta-nome').value = '';
+                
+                // Mostrar mensagem de sucesso
+                alert(`Pasta "${nome}" criada com sucesso!`);
+                
+                // Recarregar lista de pastas
+                // Em uma implementação real, aqui seria recarregada a lista de pastas
+            } catch (error) {
+                console.error('Erro ao criar pasta:', error);
+                alert('Ocorreu um erro ao criar a pasta. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para processar arquivos selecionados para upload
+        function handleFiles(files) {
+            // Limpar lista de arquivos para upload
+            arquivosParaUpload = [];
+            
+            // Limpar preview
+            const uploadPreview = document.getElementById('upload-preview');
+            uploadPreview.innerHTML = '';
+            
+            // Processar cada arquivo
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Adicionar à lista de arquivos para upload
+                arquivosParaUpload.push(file);
+                
+                // Criar elemento de preview
+                const fileItem = document.createElement('div');
+                fileItem.className = 'upload-file-item';
+                
+                // Determinar ícone baseado no tipo
+                let icone = 'fa-file';
+                let iconeCor = 'text-secondary';
+                
+                const fileType = file.name.split('.').pop().toLowerCase();
+                
+                switch (fileType) {
+                    case 'pdf': 
+                        icone = 'fa-file-pdf'; 
+                        iconeCor = 'text-danger';
+                        break;
+                    case 'doc':
+                    case 'docx': 
+                        icone = 'fa-file-word'; 
+                        iconeCor = 'text-primary';
+                        break;
+                    case 'xls':
+                    case 'xlsx': 
+                        icone = 'fa-file-excel'; 
+                        iconeCor = 'text-success';
+                        break;
+                    case 'ppt':
+                    case 'pptx': 
+                        icone = 'fa-file-powerpoint'; 
+                        iconeCor = 'text-warning';
+                        break;
+                    case 'jpg':
+                    case 'jpeg':
+                    case 'png':
+                    case 'gif': 
+                        icone = 'fa-file-image'; 
+                        iconeCor = 'text-info';
+                        break;
+                    case 'mp3':
+                    case 'wav': 
+                        icone = 'fa-file-audio'; 
+                        iconeCor = 'text-primary';
+                        break;
+                    case 'mp4': 
+                        icone = 'fa-file-video'; 
+                        iconeCor = 'text-danger';
+                        break;
+                }
+                
+                // Formatar tamanho
+                let tamanho = file.size;
+                let unidade = 'B';
+                
+                if (tamanho > 1024) {
+                    tamanho = tamanho / 1024;
+                    unidade = 'KB';
+                }
+                
+                if (tamanho > 1024) {
+                    tamanho = tamanho / 1024;
+                    unidade = 'MB';
+                }
+                
+                tamanho = tamanho.toFixed(2);
+                
+                fileItem.innerHTML = `
+                    <div class="upload-file-icon ${iconeCor}">
+                        <i class="fas ${icone}"></i>
+                    </div>
+                    <div class="upload-file-info">
+                        <div class="upload-file-name">${file.name}</div>
+                        <div class="upload-file-size">${tamanho} ${unidade}</div>
+                    </div>
+                    <div class="upload-file-actions">
+                        <button class="btn btn-sm btn-outline-danger btn-remover-arquivo" data-index="${i}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                uploadPreview.appendChild(fileItem);
+            }
+            
+            // Configurar eventos dos botões de remoção
+            document.querySelectorAll('.btn-remover-arquivo').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    
+                    // Remover arquivo da lista
+                    arquivosParaUpload.splice(index, 1);
+                    
+                    // Remover elemento de preview
+                    this.closest('.upload-file-item').remove();
+                    
+                    // Atualizar índices dos botões de remoção
+                    document.querySelectorAll('.btn-remover-arquivo').forEach((btn, i) => {
+                        btn.dataset.index = i;
+                    });
+                });
+            });
+        }
+        
+        // Função para iniciar upload
+        async function iniciarUpload() {
+            if (arquivosParaUpload.length === 0) {
+                alert('Por favor, selecione pelo menos um arquivo para upload.');
+                return;
+            }
+            
+            const pasta = document.getElementById('upload-pasta').value;
+            const permissao = document.getElementById('upload-permissao').value;
+            
+            try {
+                // Em uma implementação real, aqui seria feita uma chamada à API do Google Drive
+                // Para esta demonstração, vamos simular um upload
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Fechar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalUpload'));
+                modal.hide();
+                
+                // Limpar formulário
+                document.getElementById('upload-preview').innerHTML = '';
+                arquivosParaUpload = [];
+                
+                // Mostrar mensagem de sucesso
+                alert(`${arquivosParaUpload.length} arquivo(s) enviado(s) com sucesso!`);
+                
+                // Recarregar lista de arquivos
+                carregarArquivos(pasta);
+            } catch (error) {
+                console.error('Erro ao fazer upload:', error);
+                alert('Ocorreu um erro ao fazer upload dos arquivos. Por favor, tente novamente.');
+            }
+        }
+    </script>
+</body>
+</html>

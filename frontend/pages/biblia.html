@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bíblia - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <span class="navbar-logo"></span>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="biblia-container">
+                <div class="biblia-header">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="versao-biblia" class="form-label">Versão</label>
+                            <select class="form-select" id="versao-biblia">
+                                <option value="almeida" selected>Almeida (Português)</option>
+                                <option value="kjv">King James (KJV - English)</option>
+                                <option value="web">World English Bible (WEB)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="livro-biblia" class="form-label">Livro</label>
+                            <select class="form-select" id="livro-biblia">
+                                <!-- Será preenchido via JavaScript -->
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="capitulo-biblia" class="form-label">Capítulo</label>
+                            <select class="form-select" id="capitulo-biblia">
+                                <!-- Será preenchido via JavaScript -->
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="pesquisar-biblia" class="form-label">Pesquisar</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="pesquisar-biblia" placeholder="Palavra ou referência...">
+                                <button class="btn btn-primary" type="button" id="btn-pesquisar-biblia">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="biblia-content" id="biblia-conteudo">
+                    <div class="text-center py-5" id="biblia-loading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="mt-3">Carregando texto bíblico...</p>
+                    </div>
+                    
+                    <div id="biblia-texto" style="display: none;">
+                        <h2 class="biblia-chapter-title" id="biblia-titulo-capitulo">Gênesis 1</h2>
+                        <div id="biblia-versiculos">
+                            <!-- Será preenchido via JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div id="biblia-erro" class="alert alert-danger" style="display: none;">
+                        Ocorreu um erro ao carregar o texto bíblico. Por favor, tente novamente.
+                    </div>
+                    
+                    <div id="biblia-resultados-pesquisa" style="display: none;">
+                        <h3 class="mb-4">Resultados da Pesquisa</h3>
+                        <div id="biblia-lista-resultados">
+                            <!-- Será preenchido via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <!-- Sidebar Loader -->
+    <script src="../js/sidebar-loader.js"></script>
+    
+    <script>
+        // Dados dos livros da Bíblia (apiName = nome aceito pela bible-api.com)
+        const livrosBiblia = [
+            { id: 'gen', nome: 'Gênesis', abreviacao: 'Gn', testamento: 'AT', capitulos: 50, apiName: 'genesis' },
+            { id: 'exo', nome: 'Êxodo', abreviacao: 'Ex', testamento: 'AT', capitulos: 40, apiName: 'exodus' },
+            { id: 'lev', nome: 'Levítico', abreviacao: 'Lv', testamento: 'AT', capitulos: 27, apiName: 'leviticus' },
+            { id: 'num', nome: 'Números', abreviacao: 'Nm', testamento: 'AT', capitulos: 36, apiName: 'numbers' },
+            { id: 'deu', nome: 'Deuteronômio', abreviacao: 'Dt', testamento: 'AT', capitulos: 34, apiName: 'deuteronomy' },
+            { id: 'jos', nome: 'Josué', abreviacao: 'Js', testamento: 'AT', capitulos: 24, apiName: 'joshua' },
+            { id: 'jdg', nome: 'Juízes', abreviacao: 'Jz', testamento: 'AT', capitulos: 21, apiName: 'judges' },
+            { id: 'rut', nome: 'Rute', abreviacao: 'Rt', testamento: 'AT', capitulos: 4, apiName: 'ruth' },
+            { id: '1sa', nome: '1 Samuel', abreviacao: '1Sm', testamento: 'AT', capitulos: 31, apiName: '1+samuel' },
+            { id: '2sa', nome: '2 Samuel', abreviacao: '2Sm', testamento: 'AT', capitulos: 24, apiName: '2+samuel' },
+            { id: '1ki', nome: '1 Reis', abreviacao: '1Rs', testamento: 'AT', capitulos: 22, apiName: '1+kings' },
+            { id: '2ki', nome: '2 Reis', abreviacao: '2Rs', testamento: 'AT', capitulos: 25, apiName: '2+kings' },
+            { id: '1ch', nome: '1 Crônicas', abreviacao: '1Cr', testamento: 'AT', capitulos: 29, apiName: '1+chronicles' },
+            { id: '2ch', nome: '2 Crônicas', abreviacao: '2Cr', testamento: 'AT', capitulos: 36, apiName: '2+chronicles' },
+            { id: 'ezr', nome: 'Esdras', abreviacao: 'Ed', testamento: 'AT', capitulos: 10, apiName: 'ezra' },
+            { id: 'neh', nome: 'Neemias', abreviacao: 'Ne', testamento: 'AT', capitulos: 13, apiName: 'nehemiah' },
+            { id: 'est', nome: 'Ester', abreviacao: 'Et', testamento: 'AT', capitulos: 10, apiName: 'esther' },
+            { id: 'job', nome: 'Jó', abreviacao: 'Jó', testamento: 'AT', capitulos: 42, apiName: 'job' },
+            { id: 'psa', nome: 'Salmos', abreviacao: 'Sl', testamento: 'AT', capitulos: 150, apiName: 'psalms' },
+            { id: 'pro', nome: 'Provérbios', abreviacao: 'Pv', testamento: 'AT', capitulos: 31, apiName: 'proverbs' },
+            { id: 'ecc', nome: 'Eclesiastes', abreviacao: 'Ec', testamento: 'AT', capitulos: 12, apiName: 'ecclesiastes' },
+            { id: 'sng', nome: 'Cânticos', abreviacao: 'Ct', testamento: 'AT', capitulos: 8, apiName: 'song+of+solomon' },
+            { id: 'isa', nome: 'Isaías', abreviacao: 'Is', testamento: 'AT', capitulos: 66, apiName: 'isaiah' },
+            { id: 'jer', nome: 'Jeremias', abreviacao: 'Jr', testamento: 'AT', capitulos: 52, apiName: 'jeremiah' },
+            { id: 'lam', nome: 'Lamentações', abreviacao: 'Lm', testamento: 'AT', capitulos: 5, apiName: 'lamentations' },
+            { id: 'ezk', nome: 'Ezequiel', abreviacao: 'Ez', testamento: 'AT', capitulos: 48, apiName: 'ezekiel' },
+            { id: 'dan', nome: 'Daniel', abreviacao: 'Dn', testamento: 'AT', capitulos: 12, apiName: 'daniel' },
+            { id: 'hos', nome: 'Oséias', abreviacao: 'Os', testamento: 'AT', capitulos: 14, apiName: 'hosea' },
+            { id: 'jol', nome: 'Joel', abreviacao: 'Jl', testamento: 'AT', capitulos: 3, apiName: 'joel' },
+            { id: 'amo', nome: 'Amós', abreviacao: 'Am', testamento: 'AT', capitulos: 9, apiName: 'amos' },
+            { id: 'oba', nome: 'Obadias', abreviacao: 'Ob', testamento: 'AT', capitulos: 1, apiName: 'obadiah' },
+            { id: 'jon', nome: 'Jonas', abreviacao: 'Jn', testamento: 'AT', capitulos: 4, apiName: 'jonah' },
+            { id: 'mic', nome: 'Miquéias', abreviacao: 'Mq', testamento: 'AT', capitulos: 7, apiName: 'micah' },
+            { id: 'nam', nome: 'Naum', abreviacao: 'Na', testamento: 'AT', capitulos: 3, apiName: 'nahum' },
+            { id: 'hab', nome: 'Habacuque', abreviacao: 'Hc', testamento: 'AT', capitulos: 3, apiName: 'habakkuk' },
+            { id: 'zep', nome: 'Sofonias', abreviacao: 'Sf', testamento: 'AT', capitulos: 3, apiName: 'zephaniah' },
+            { id: 'hag', nome: 'Ageu', abreviacao: 'Ag', testamento: 'AT', capitulos: 2, apiName: 'haggai' },
+            { id: 'zec', nome: 'Zacarias', abreviacao: 'Zc', testamento: 'AT', capitulos: 14, apiName: 'zechariah' },
+            { id: 'mal', nome: 'Malaquias', abreviacao: 'Ml', testamento: 'AT', capitulos: 4, apiName: 'malachi' },
+            { id: 'mat', nome: 'Mateus', abreviacao: 'Mt', testamento: 'NT', capitulos: 28, apiName: 'matthew' },
+            { id: 'mrk', nome: 'Marcos', abreviacao: 'Mc', testamento: 'NT', capitulos: 16, apiName: 'mark' },
+            { id: 'luk', nome: 'Lucas', abreviacao: 'Lc', testamento: 'NT', capitulos: 24, apiName: 'luke' },
+            { id: 'jhn', nome: 'João', abreviacao: 'Jo', testamento: 'NT', capitulos: 21, apiName: 'john' },
+            { id: 'act', nome: 'Atos', abreviacao: 'At', testamento: 'NT', capitulos: 28, apiName: 'acts' },
+            { id: 'rom', nome: 'Romanos', abreviacao: 'Rm', testamento: 'NT', capitulos: 16, apiName: 'romans' },
+            { id: '1co', nome: '1 Coríntios', abreviacao: '1Co', testamento: 'NT', capitulos: 16, apiName: '1+corinthians' },
+            { id: '2co', nome: '2 Coríntios', abreviacao: '2Co', testamento: 'NT', capitulos: 13, apiName: '2+corinthians' },
+            { id: 'gal', nome: 'Gálatas', abreviacao: 'Gl', testamento: 'NT', capitulos: 6, apiName: 'galatians' },
+            { id: 'eph', nome: 'Efésios', abreviacao: 'Ef', testamento: 'NT', capitulos: 6, apiName: 'ephesians' },
+            { id: 'php', nome: 'Filipenses', abreviacao: 'Fp', testamento: 'NT', capitulos: 4, apiName: 'philippians' },
+            { id: 'col', nome: 'Colossenses', abreviacao: 'Cl', testamento: 'NT', capitulos: 4, apiName: 'colossians' },
+            { id: '1th', nome: '1 Tessalonicenses', abreviacao: '1Ts', testamento: 'NT', capitulos: 5, apiName: '1+thessalonians' },
+            { id: '2th', nome: '2 Tessalonicenses', abreviacao: '2Ts', testamento: 'NT', capitulos: 3, apiName: '2+thessalonians' },
+            { id: '1ti', nome: '1 Timóteo', abreviacao: '1Tm', testamento: 'NT', capitulos: 6, apiName: '1+timothy' },
+            { id: '2ti', nome: '2 Timóteo', abreviacao: '2Tm', testamento: 'NT', capitulos: 4, apiName: '2+timothy' },
+            { id: 'tit', nome: 'Tito', abreviacao: 'Tt', testamento: 'NT', capitulos: 3, apiName: 'titus' },
+            { id: 'phm', nome: 'Filemom', abreviacao: 'Fm', testamento: 'NT', capitulos: 1, apiName: 'philemon' },
+            { id: 'heb', nome: 'Hebreus', abreviacao: 'Hb', testamento: 'NT', capitulos: 13, apiName: 'hebrews' },
+            { id: 'jas', nome: 'Tiago', abreviacao: 'Tg', testamento: 'NT', capitulos: 5, apiName: 'james' },
+            { id: '1pe', nome: '1 Pedro', abreviacao: '1Pe', testamento: 'NT', capitulos: 5, apiName: '1+peter' },
+            { id: '2pe', nome: '2 Pedro', abreviacao: '2Pe', testamento: 'NT', capitulos: 3, apiName: '2+peter' },
+            { id: '1jn', nome: '1 João', abreviacao: '1Jo', testamento: 'NT', capitulos: 5, apiName: '1+john' },
+            { id: '2jn', nome: '2 João', abreviacao: '2Jo', testamento: 'NT', capitulos: 1, apiName: '2+john' },
+            { id: '3jn', nome: '3 João', abreviacao: '3Jo', testamento: 'NT', capitulos: 1, apiName: '3+john' },
+            { id: 'jud', nome: 'Judas', abreviacao: 'Jd', testamento: 'NT', capitulos: 1, apiName: 'jude' },
+            { id: 'rev', nome: 'Apocalipse', abreviacao: 'Ap', testamento: 'NT', capitulos: 22, apiName: 'revelation' }
+        ];
+        
+        // Cache para textos bíblicos
+        const cacheBiblia = {};
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aplicar tradução padrão da config
+            const versaoPadrao = (window.IGREJA_CONFIG || {}).BIBLIA_TRADUCAO_PADRAO || 'almeida';
+            document.getElementById('versao-biblia').value = versaoPadrao;
+
+            // Verificar login
+            verificarLogin();
+            
+            // Configurar sidebar mobile
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            if (sidebarToggleBtn) {
+                sidebarToggleBtn.addEventListener('click', function() {
+                    document.querySelector('.sidebar').classList.toggle('show');
+                });
+            }
+            
+            // Preencher select de livros
+            const selectLivro = document.getElementById('livro-biblia');
+            
+            // Adicionar optgroup para Antigo Testamento
+            const optgroupAT = document.createElement('optgroup');
+            optgroupAT.label = 'Antigo Testamento';
+            
+            livrosBiblia.filter(livro => livro.testamento === 'AT').forEach(livro => {
+                const option = document.createElement('option');
+                option.value = livro.id;
+                option.textContent = livro.nome;
+                optgroupAT.appendChild(option);
+            });
+            
+            selectLivro.appendChild(optgroupAT);
+            
+            // Adicionar optgroup para Novo Testamento
+            const optgroupNT = document.createElement('optgroup');
+            optgroupNT.label = 'Novo Testamento';
+            
+            livrosBiblia.filter(livro => livro.testamento === 'NT').forEach(livro => {
+                const option = document.createElement('option');
+                option.value = livro.id;
+                option.textContent = livro.nome;
+                optgroupNT.appendChild(option);
+            });
+            
+            selectLivro.appendChild(optgroupNT);
+            
+            // Configurar eventos
+            selectLivro.addEventListener('change', atualizarCapitulos);
+            document.getElementById('capitulo-biblia').addEventListener('change', carregarTextoBiblico);
+            document.getElementById('versao-biblia').addEventListener('change', carregarTextoBiblico);
+            document.getElementById('btn-pesquisar-biblia').addEventListener('click', pesquisarBiblia);
+            document.getElementById('pesquisar-biblia').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    pesquisarBiblia();
+                }
+            });
+            
+            // Inicializar com Gênesis 1 (atualizarCapitulos já chama carregarTextoBiblico)
+            selectLivro.value = 'gen';
+            atualizarCapitulos();
+        });
+        
+        // Função para atualizar os capítulos disponíveis
+        function atualizarCapitulos() {
+            const livroId = document.getElementById('livro-biblia').value;
+            const selectCapitulo = document.getElementById('capitulo-biblia');
+            
+            // Limpar select
+            selectCapitulo.innerHTML = '';
+            
+            // Encontrar livro selecionado
+            const livro = livrosBiblia.find(l => l.id === livroId);
+            
+            if (livro) {
+                // Adicionar opções de capítulos
+                for (let i = 1; i <= livro.capitulos; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    selectCapitulo.appendChild(option);
+                }
+                
+                // Carregar texto bíblico
+                carregarTextoBiblico();
+            }
+        }
+        
+        // Função para carregar o texto bíblico via bible-api.com
+        async function carregarTextoBiblico() {
+            const versao = document.getElementById('versao-biblia').value;
+            const livroId = document.getElementById('livro-biblia').value;
+            const capitulo = document.getElementById('capitulo-biblia').value;
+
+            // Mostrar loading
+            document.getElementById('biblia-loading').style.display = 'block';
+            document.getElementById('biblia-texto').style.display = 'none';
+            document.getElementById('biblia-erro').style.display = 'none';
+            document.getElementById('biblia-resultados-pesquisa').style.display = 'none';
+
+            try {
+                // Verificar cache
+                const cacheKey = `${versao}-${livroId}-${capitulo}`;
+                let versiculos;
+
+                if (cacheBiblia[cacheKey]) {
+                    versiculos = cacheBiblia[cacheKey];
+                } else {
+                    const livro = livrosBiblia.find(l => l.id === livroId);
+                    const url = `https://bible-api.com/${livro.apiName}+${capitulo}?translation=${versao}`;
+                    const resp = await fetch(url);
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const dados = await resp.json();
+                    versiculos = dados.verses.map(v => ({ numero: v.verse, texto: v.text.trim() }));
+                    cacheBiblia[cacheKey] = versiculos;
+                }
+
+                // Encontrar livro
+                const livro = livrosBiblia.find(l => l.id === livroId);
+
+                // Atualizar título
+                document.getElementById('biblia-titulo-capitulo').textContent = `${livro.nome} ${capitulo}`;
+
+                // Preencher versículos
+                const versiculosContainer = document.getElementById('biblia-versiculos');
+                versiculosContainer.innerHTML = '';
+
+                versiculos.forEach(v => {
+                    const el = document.createElement('p');
+                    el.className = 'biblia-verse';
+                    el.innerHTML = `<span class="biblia-verse-number">${v.numero}</span> ${v.texto}`;
+                    versiculosContainer.appendChild(el);
+                });
+
+                // Mostrar texto
+                document.getElementById('biblia-loading').style.display = 'none';
+                document.getElementById('biblia-texto').style.display = 'block';
+            } catch (error) {
+                console.error('Erro ao carregar texto bíblico:', error);
+                document.getElementById('biblia-loading').style.display = 'none';
+                document.getElementById('biblia-erro').style.display = 'block';
+                document.getElementById('biblia-erro').textContent = 'Não foi possível carregar o texto bíblico. Verifique sua conexão com a internet e tente novamente.';
+            }
+        }
+
+        // Função para pesquisar na Bíblia via bible-api.com
+        async function pesquisarBiblia() {
+            const termo = document.getElementById('pesquisar-biblia').value.trim();
+            if (!termo) return;
+
+            const versao = document.getElementById('versao-biblia').value;
+
+            // Mostrar loading
+            document.getElementById('biblia-loading').style.display = 'block';
+            document.getElementById('biblia-texto').style.display = 'none';
+            document.getElementById('biblia-erro').style.display = 'none';
+            document.getElementById('biblia-resultados-pesquisa').style.display = 'none';
+
+            try {
+                // bible-api.com suporta referência direta (ex: "joão 3:16")
+                const termoEncoded = encodeURIComponent(termo);
+                const url = `https://bible-api.com/${termoEncoded}?translation=${versao}`;
+                const resp = await fetch(url);
+
+                const resultadosContainer = document.getElementById('biblia-lista-resultados');
+                resultadosContainer.innerHTML = '';
+
+                if (!resp.ok) {
+                    resultadosContainer.innerHTML = `<div class="alert alert-info">Nenhum resultado encontrado para "${termo}". Tente uma referência como "João 3:16" ou "Salmos 23".</div>`;
+                } else {
+                    const dados = await resp.json();
+                    const verses = dados.verses || [];
+
+                    if (verses.length === 0) {
+                        resultadosContainer.innerHTML = `<div class="alert alert-info">Nenhum resultado encontrado para "${termo}".</div>`;
+                    } else {
+                        verses.forEach(v => {
+                            const el = document.createElement('div');
+                            el.className = 'card mb-3';
+                            // Encontrar o livro pelo nome da API
+                            const livroEncontrado = livrosBiblia.find(l =>
+                                l.apiName.toLowerCase().replace(/\+/g, ' ') === v.book_name.toLowerCase() ||
+                                l.nome.toLowerCase() === v.book_name.toLowerCase()
+                            );
+                            el.innerHTML = `
+                                <div class="card-body">
+                                    <h5 class="card-title">${v.book_name} ${v.chapter}:${v.verse}</h5>
+                                    <p class="card-text">${v.text.trim()}</p>
+                                    ${livroEncontrado ? `<button class="btn btn-sm btn-outline-primary btn-ir-versiculo"
+                                        data-livro="${livroEncontrado.id}"
+                                        data-capitulo="${v.chapter}">Ir para este capítulo</button>` : ''}
+                                </div>
+                            `;
+                            resultadosContainer.appendChild(el);
+                        });
+
+                        document.querySelectorAll('.btn-ir-versiculo').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                document.getElementById('livro-biblia').value = this.dataset.livro;
+                                atualizarCapitulos();
+                                document.getElementById('capitulo-biblia').value = this.dataset.capitulo;
+                                carregarTextoBiblico();
+                            });
+                        });
+                    }
+                }
+
+                document.getElementById('biblia-loading').style.display = 'none';
+                document.getElementById('biblia-resultados-pesquisa').style.display = 'block';
+            } catch (error) {
+                console.error('Erro ao pesquisar na Bíblia:', error);
+                document.getElementById('biblia-loading').style.display = 'none';
+                document.getElementById('biblia-erro').style.display = 'block';
+                document.getElementById('biblia-erro').textContent = 'Não foi possível realizar a pesquisa. Verifique sua conexão e tente novamente.';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-church me-2"></i>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <h1 class="mb-4">Meu Perfil</h1>
+            
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-user-circle fa-6x text-primary"></i>
+                            </div>
+                            <h4 class="card-title nome-usuario">Nome do Usuário</h4>
+                            <p class="card-text text-muted" id="perfil-tipo">Tipo de Perfil</p>
+                            <p class="card-text" id="perfil-email">email@exemplo.com</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Informações do Perfil</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="form-perfil">
+                                <div class="mb-3">
+                                    <label for="perfil-nome" class="form-label">Nome Completo</label>
+                                    <input type="text" class="form-control" id="perfil-nome" placeholder="Seu nome completo">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="perfil-email-input" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="perfil-email-input" placeholder="seu@email.com" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="perfil-senha-atual" class="form-label">Senha Atual</label>
+                                    <input type="password" class="form-control" id="perfil-senha-atual" placeholder="Digite sua senha atual">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="perfil-nova-senha" class="form-label">Nova Senha</label>
+                                    <input type="password" class="form-control" id="perfil-nova-senha" placeholder="Digite sua nova senha">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="perfil-confirmar-senha" class="form-label">Confirmar Nova Senha</label>
+                                    <input type="password" class="form-control" id="perfil-confirmar-senha" placeholder="Confirme sua nova senha">
+                                </div>
+                                <button type="button" class="btn btn-primary" id="btn-salvar-perfil">Salvar Alterações</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Meus Ministérios</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Ministério</th>
+                                            <th>Função</th>
+                                            <th>Líder</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-meus-ministerios">
+                                        <!-- Será preenchido via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Minhas Próximas Escalas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Ministério</th>
+                                            <th>Descrição</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-minhas-escalas">
+                                        <!-- Será preenchido via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <script src="../js/sidebar-loader.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const usuario = verificarLogin();
+            
+            if (!usuario) return;
+            
+            try {
+                // Carregar dados
+                const ministerios = await fetchAPI('ministerios');
+                const membrosMinisterio = await fetchAPI('membros');
+                const escalas = await fetchAPI('escalas');
+                const usuarios = await fetchAPI('usuarios');
+                
+                // Preencher informações do perfil
+                document.getElementById('perfil-nome').value = usuario.nome;
+                document.getElementById('perfil-email-input').value = usuario.email;
+                
+                // Mostrar tipo de perfil
+                let tipoPerfilTexto = '';
+                switch (usuario.tipoPerfil) {
+                    case PERFIS.PASTOR:
+                        tipoPerfilTexto = 'Pastor';
+                        break;
+                    case PERFIS.ADMIN:
+                        tipoPerfilTexto = 'Líder de Ministério';
+                        break;
+                    case PERFIS.PADRAO:
+                        tipoPerfilTexto = 'Membro';
+                        break;
+                    default:
+                        tipoPerfilTexto = 'Usuário';
+                }
+                document.getElementById('perfil-tipo').textContent = tipoPerfilTexto;
+                document.getElementById('perfil-email').textContent = usuario.email;
+                
+                // Preencher tabela de ministérios do usuário
+                const tabelaMeusMinisterios = document.getElementById('tabela-meus-ministerios');
+                const meusMinisterios = membrosMinisterio.filter(m => m.idUsuario === usuario.id);
+                
+                if (meusMinisterios.length === 0) {
+                    tabelaMeusMinisterios.innerHTML = '<tr><td colspan="3" class="text-center">Você não está cadastrado em nenhum ministério.</td></tr>';
+                } else {
+                    meusMinisterios.forEach(membro => {
+                        const ministerio = ministerios.find(m => m.id === membro.idMinisterio);
+                        if (!ministerio) return;
+                        
+                        const lider = usuarios.find(u => u.id === ministerio.idLider);
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${ministerio.nome}</td>
+                            <td>${membro.funcao}</td>
+                            <td>${lider ? lider.nome : 'Não definido'}</td>
+                        `;
+                        
+                        tabelaMeusMinisterios.appendChild(row);
+                    });
+                }
+                
+                // Preencher tabela de escalas do usuário
+                const tabelaMinhasEscalas = document.getElementById('tabela-minhas-escalas');
+                
+                // Filtrar escalas dos ministérios do usuário
+                const ministeriosIds = meusMinisterios.map(m => m.idMinisterio);
+                const minhasEscalas = escalas.filter(e => ministeriosIds.includes(e.idMinisterio));
+                
+                if (minhasEscalas.length === 0) {
+                    tabelaMinhasEscalas.innerHTML = '<tr><td colspan="3" class="text-center">Você não tem escalas programadas.</td></tr>';
+                } else {
+                    // Ordenar escalas por data
+                    minhasEscalas.sort((a, b) => new Date(a.data) - new Date(b.data));
+                    
+                    // Mostrar apenas as próximas escalas (data >= hoje)
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+                    
+                    const proximasEscalas = minhasEscalas.filter(e => new Date(e.data) >= hoje);
+                    
+                    if (proximasEscalas.length === 0) {
+                        tabelaMinhasEscalas.innerHTML = '<tr><td colspan="3" class="text-center">Você não tem escalas futuras programadas.</td></tr>';
+                    } else {
+                        proximasEscalas.forEach(escala => {
+                            const ministerio = ministerios.find(m => m.id === escala.idMinisterio);
+                            
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${formatarData(escala.data)}</td>
+                                <td>${ministerio ? ministerio.nome : 'Ministério não encontrado'}</td>
+                                <td>${escala.descricao}</td>
+                            `;
+                            
+                            tabelaMinhasEscalas.appendChild(row);
+                        });
+                    }
+                }
+                
+                // Configurar evento de salvar perfil
+                document.getElementById('btn-salvar-perfil').addEventListener('click', salvarPerfil);
+            } catch (error) {
+                console.error('Erro ao carregar dados do perfil:', error);
+            }
+        });
+        
+        // Função para salvar alterações do perfil
+        function salvarPerfil() {
+            const usuario = verificarLogin();
+            
+            if (!usuario) return;
+            
+            const nome = document.getElementById('perfil-nome').value;
+            const senhaAtual = document.getElementById('perfil-senha-atual').value;
+            const novaSenha = document.getElementById('perfil-nova-senha').value;
+            const confirmarSenha = document.getElementById('perfil-confirmar-senha').value;
+            
+            if (!nome) {
+                alert('Por favor, preencha o seu nome.');
+                return;
+            }
+            
+            // Verificar se o usuário quer alterar a senha
+            if (senhaAtual || novaSenha || confirmarSenha) {
+                if (!senhaAtual) {
+                    alert('Por favor, digite sua senha atual.');
+                    return;
+                }
+                
+                if (!novaSenha) {
+                    alert('Por favor, digite sua nova senha.');
+                    return;
+                }
+                
+                if (novaSenha !== confirmarSenha) {
+                    alert('A nova senha e a confirmação não coincidem.');
+                    return;
+                }
+                
+                // Verificar senha atual (mock)
+                if (senhaAtual !== 'pastor123' && senhaAtual !== 'lider123' && senhaAtual !== 'membro123') {
+                    alert('Senha atual incorreta.');
+                    return;
+                }
+            }
+            
+            // Atualizar dados do usuário (mock)
+            usuario.nome = nome;
+            
+            if (novaSenha) {
+                // Em um sistema real, a senha seria atualizada no backend
+                console.log('Senha atualizada com sucesso!');
+            }
+            
+            // Atualizar no localStorage
+            localStorage.setItem('usuario', JSON.stringify(usuario));
+            
+            // Atualizar elementos da interface
+            document.querySelectorAll('.nome-usuario').forEach(el => {
+                el.textContent = usuario.nome;
+            });
+            
+            // Limpar campos de senha
+            document.getElementById('perfil-senha-atual').value = '';
+            document.getElementById('perfil-nova-senha').value = '';
+            document.getElementById('perfil-confirmar-senha').value = '';
+            
+            alert('Perfil atualizado com sucesso!');
+        }
+    </script>
+</body>
+</html>

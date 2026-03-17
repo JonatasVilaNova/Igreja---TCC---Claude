@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Escala - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <span class="navbar-logo"></span>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="escalas.html" class="btn btn-outline-primary mb-2">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar para Escalas
+                    </a>
+                    <h1 id="escala-titulo">Detalhes da Escala</h1>
+                    <p class="text-muted" id="escala-info">Carregando informações...</p>
+                </div>
+                <div class="admin-only">
+                    <button class="btn btn-primary" id="btn-adicionar-conteudo">
+                        <i class="fas fa-plus me-2"></i>Adicionar Conteúdo
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Informações da Escala -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Informações Gerais</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>Ministério:</strong> <span id="escala-ministerio">Carregando...</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Data:</strong> <span id="escala-data">Carregando...</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Descrição:</strong> <span id="escala-descricao">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Membros Escalados</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Função</th>
+                                            <th>Instrumento</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-membros-escala">
+                                        <!-- Será preenchido via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conteúdos da Escala -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Conteúdos da Escala</h5>
+                </div>
+                <div class="card-body">
+                    <div id="conteudos-container">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Conteúdo -->
+    <div class="modal fade" id="modalConteudo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalConteudoTitulo">Adicionar Conteúdo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-conteudo">
+                        <input type="hidden" id="conteudo-id">
+                        <input type="hidden" id="conteudo-escala-id">
+                        
+                        <div class="mb-3">
+                            <label for="conteudo-tipo" class="form-label">Tipo de Conteúdo</label>
+                            <select class="form-select" id="conteudo-tipo" required>
+                                <option value="">Selecione um tipo</option>
+                                <option value="musica">Música</option>
+                                <option value="arquivo">Arquivo/Documento</option>
+                                <option value="link">Link Externo</option>
+                                <option value="texto">Texto/Mensagem</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="conteudo-titulo" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="conteudo-titulo" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="conteudo-detalhes" class="form-label">Detalhes</label>
+                            <textarea class="form-control" id="conteudo-detalhes" rows="3"></textarea>
+                            <div class="form-text" id="detalhes-info">Para músicas, informe tom, BPM, etc. Para arquivos, descreva o conteúdo.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="conteudo-link" class="form-label">Link</label>
+                            <input type="text" class="form-control" id="conteudo-link" placeholder="https://">
+                            <div class="form-text">Link para o arquivo, vídeo, ou página externa.</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-conteudo">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Definir Instrumento -->
+    <div class="modal fade" id="modalInstrumento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Definir Instrumento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-instrumento">
+                        <input type="hidden" id="membro-escala-id">
+                        
+                        <div class="mb-3">
+                            <label for="membro-nome" class="form-label">Membro</label>
+                            <input type="text" class="form-control" id="membro-nome" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="membro-instrumento" class="form-label">Instrumento</label>
+                            <input type="text" class="form-control" id="membro-instrumento" required>
+                            <div class="form-text">Informe o instrumento que este membro tocará nesta escala.</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-instrumento">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <!-- Sidebar Loader -->
+    <script src="../js/sidebar-loader.js"></script>
+    
+    <script>
+        let escalaAtual = null;
+        let ministerios = [];
+        let membrosMinisterio = [];
+        let usuarios = [];
+        let conteudosEscala = [];
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            const usuario = verificarLogin();
+            
+            if (!usuario) return;
+            
+            try {
+                // Obter ID da escala da URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const escalaId = parseInt(urlParams.get('id'));
+                
+                if (!escalaId) {
+                    window.location.href = 'escalas.html';
+                    return;
+                }
+                
+                // Carregar dados
+                escalaAtual = await fetchAPI(`escalas/${escalaId}`);
+                ministerios = await fetchAPI('ministerios');
+                membrosMinisterio = await fetchAPI('membros');
+                usuarios = await fetchAPI('usuarios');
+                conteudosEscala = await fetchAPI(`escalas/conteudos/${escalaId}`);
+                
+                if (!escalaAtual) {
+                    alert('Escala não encontrada.');
+                    window.location.href = 'escalas.html';
+                    return;
+                }
+                
+                // Preencher informações da escala
+                const ministerio = ministerios.find(m => m.id === escalaAtual.idMinisterio);
+                
+                document.getElementById('escala-titulo').textContent = escalaAtual.descricao;
+                document.getElementById('escala-info').textContent = `${ministerio ? ministerio.nome : 'N/A'} - ${formatarData(escalaAtual.data)}`;
+                document.getElementById('escala-ministerio').textContent = ministerio ? ministerio.nome : 'N/A';
+                document.getElementById('escala-data').textContent = formatarData(escalaAtual.data);
+                document.getElementById('escala-descricao').textContent = escalaAtual.descricao;
+                
+                // Preencher membros da escala
+                atualizarTabelaMembrosEscala();
+                
+                // Preencher conteúdos da escala
+                atualizarConteudosEscala();
+                
+                // Configurar eventos
+                document.getElementById('btn-adicionar-conteudo').addEventListener('click', abrirModalAdicionarConteudo);
+                document.getElementById('btn-salvar-conteudo').addEventListener('click', salvarConteudo);
+                document.getElementById('btn-salvar-instrumento').addEventListener('click', salvarInstrumento);
+                
+                // Resetar formulários quando os modais forem fechados
+                const modalConteudo = document.getElementById('modalConteudo');
+                modalConteudo.addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('form-conteudo').reset();
+                    document.getElementById('conteudo-id').value = '';
+                    document.getElementById('modalConteudoTitulo').textContent = 'Adicionar Conteúdo';
+                });
+                
+                const modalInstrumento = document.getElementById('modalInstrumento');
+                modalInstrumento.addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('form-instrumento').reset();
+                    document.getElementById('membro-escala-id').value = '';
+                });
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                alert('Ocorreu um erro ao carregar os dados da escala. Por favor, tente novamente.');
+            }
+        });
+        
+        // Função para atualizar a tabela de membros da escala
+        function atualizarTabelaMembrosEscala() {
+            const tabelaMembros = document.getElementById('tabela-membros-escala');
+            tabelaMembros.innerHTML = '';
+            
+            if (!escalaAtual.membros || escalaAtual.membros.length === 0) {
+                tabelaMembros.innerHTML = '<tr><td colspan="3" class="text-center">Nenhum membro escalado.</td></tr>';
+                return;
+            }
+            
+            escalaAtual.membros.forEach(membroId => {
+                const membro = membrosMinisterio.find(m => m.id === membroId);
+                
+                if (membro) {
+                    const usuario = usuarios.find(u => u.id === membro.idUsuario);
+                    
+                    if (usuario) {
+                        const row = document.createElement('tr');
+                        
+                        // Verificar se o membro tem instrumento definido
+                        const instrumento = membro.instrumento || 'Não definido';
+                        
+                        row.innerHTML = `
+                            <td>${usuario.nome}</td>
+                            <td>${membro.funcao}</td>
+                            <td>
+                                <span class="instrumento-valor">${instrumento}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2 admin-only definir-instrumento" data-id="${membro.id}" data-nome="${usuario.nome}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                        `;
+                        
+                        tabelaMembros.appendChild(row);
+                    }
+                }
+            });
+            
+            // Configurar eventos dos botões
+            document.querySelectorAll('.definir-instrumento').forEach(btn => {
+                btn.addEventListener('click', () => abrirModalDefinirInstrumento(parseInt(btn.dataset.id), btn.dataset.nome));
+            });
+        }
+        
+        // Função para atualizar os conteúdos da escala
+        function atualizarConteudosEscala() {
+            const conteudosContainer = document.getElementById('conteudos-container');
+            conteudosContainer.innerHTML = '';
+            
+            if (!conteudosEscala || conteudosEscala.length === 0) {
+                conteudosContainer.innerHTML = `
+                    <div class="alert alert-info">
+                        Nenhum conteúdo adicionado a esta escala.
+                    </div>
+                `;
+                return;
+            }
+            
+            // Agrupar conteúdos por tipo
+            const conteudosPorTipo = {
+                musica: [],
+                arquivo: [],
+                link: [],
+                texto: []
+            };
+            
+            conteudosEscala.forEach(conteudo => {
+                if (conteudosPorTipo[conteudo.tipo]) {
+                    conteudosPorTipo[conteudo.tipo].push(conteudo);
+                } else {
+                    conteudosPorTipo.outros = conteudosPorTipo.outros || [];
+                    conteudosPorTipo.outros.push(conteudo);
+                }
+            });
+            
+            // Criar seções para cada tipo de conteúdo
+            if (conteudosPorTipo.musica.length > 0) {
+                criarSecaoConteudo('Músicas', conteudosPorTipo.musica, 'music');
+            }
+            
+            if (conteudosPorTipo.arquivo.length > 0) {
+                criarSecaoConteudo('Arquivos/Documentos', conteudosPorTipo.arquivo, 'file-alt');
+            }
+            
+            if (conteudosPorTipo.link.length > 0) {
+                criarSecaoConteudo('Links Externos', conteudosPorTipo.link, 'link');
+            }
+            
+            if (conteudosPorTipo.texto.length > 0) {
+                criarSecaoConteudo('Textos/Mensagens', conteudosPorTipo.texto, 'comment');
+            }
+            
+            if (conteudosPorTipo.outros && conteudosPorTipo.outros.length > 0) {
+                criarSecaoConteudo('Outros Conteúdos', conteudosPorTipo.outros, 'file');
+            }
+        }
+        
+        // Função para criar uma seção de conteúdo
+        function criarSecaoConteudo(titulo, conteudos, icone) {
+            const conteudosContainer = document.getElementById('conteudos-container');
+            
+            const secao = document.createElement('div');
+            secao.className = 'mb-4';
+            
+            secao.innerHTML = `
+                <h5 class="mb-3"><i class="fas fa-${icone} me-2"></i>${titulo}</h5>
+                <div class="row">
+                    ${conteudos.map(conteudo => `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">${conteudo.titulo}</h6>
+                                    <p class="card-text text-muted small">${conteudo.detalhes || ''}</p>
+                                    ${conteudo.link ? `
+                                        <a href="${conteudo.link}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-external-link-alt me-1"></i> Acessar
+                                        </a>
+                                    ` : ''}
+                                </div>
+                                <div class="card-footer bg-white border-0 admin-only">
+                                    <button class="btn btn-sm btn-outline-primary editar-conteudo" data-id="${conteudo.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger excluir-conteudo" data-id="${conteudo.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            conteudosContainer.appendChild(secao);
+            
+            // Configurar eventos dos botões
+            secao.querySelectorAll('.editar-conteudo').forEach(btn => {
+                btn.addEventListener('click', () => editarConteudo(parseInt(btn.dataset.id)));
+            });
+            
+            secao.querySelectorAll('.excluir-conteudo').forEach(btn => {
+                btn.addEventListener('click', () => excluirConteudo(parseInt(btn.dataset.id)));
+            });
+        }
+        
+        // Função para abrir o modal de adicionar conteúdo
+        function abrirModalAdicionarConteudo() {
+            document.getElementById('conteudo-id').value = '';
+            document.getElementById('conteudo-escala-id').value = escalaAtual.id;
+            document.getElementById('modalConteudoTitulo').textContent = 'Adicionar Conteúdo';
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalConteudo'));
+            modal.show();
+        }
+        
+        // Função para editar conteúdo
+        function editarConteudo(id) {
+            const conteudo = conteudosEscala.find(c => c.id === id);
+            
+            if (!conteudo) return;
+            
+            document.getElementById('conteudo-id').value = conteudo.id;
+            document.getElementById('conteudo-escala-id').value = escalaAtual.id;
+            document.getElementById('conteudo-tipo').value = conteudo.tipo;
+            document.getElementById('conteudo-titulo').value = conteudo.titulo;
+            document.getElementById('conteudo-detalhes').value = conteudo.detalhes || '';
+            document.getElementById('conteudo-link').value = conteudo.link || '';
+            
+            document.getElementById('modalConteudoTitulo').textContent = 'Editar Conteúdo';
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalConteudo'));
+            modal.show();
+        }
+        
+        // Função para salvar conteúdo (novo ou edição)
+        async function salvarConteudo() {
+            const id = document.getElementById('conteudo-id').value;
+            const escalaId = document.getElementById('conteudo-escala-id').value;
+            const tipo = document.getElementById('conteudo-tipo').value;
+            const titulo = document.getElementById('conteudo-titulo').value;
+            const detalhes = document.getElementById('conteudo-detalhes').value;
+            const link = document.getElementById('conteudo-link').value;
+            
+            if (!tipo || !titulo) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            try {
+                const conteudoData = {
+                    tipo,
+                    titulo,
+                    detalhes,
+                    link
+                };
+                
+                let response;
+                
+                if (id) {
+                    // Editar conteúdo existente
+                    conteudoData.id = parseInt(id);
+                    response = await fetchAPI(`escalas/conteudos/${escalaId}/${id}`, 'PUT', conteudoData);
+                    
+                    // Atualizar na lista local
+                    const index = conteudosEscala.findIndex(c => c.id === parseInt(id));
+                    if (index !== -1) {
+                        conteudosEscala[index] = response;
+                    }
+                } else {
+                    // Criar novo conteúdo
+                    response = await fetchAPI(`escalas/conteudos/${escalaId}`, 'POST', conteudoData);
+                    conteudosEscala.push(response);
+                }
+                
+                // Fechar modal e atualizar lista
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalConteudo'));
+                modal.hide();
+                
+                atualizarConteudosEscala();
+                
+                // Mostrar mensagem de sucesso
+                alert(id ? 'Conteúdo atualizado com sucesso!' : 'Conteúdo adicionado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao salvar conteúdo:', error);
+                alert('Ocorreu um erro ao salvar o conteúdo. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para excluir conteúdo
+        async function excluirConteudo(id) {
+            if (!confirm('Tem certeza que deseja excluir este conteúdo? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+            
+            try {
+                await fetchAPI(`escalas/conteudos/${escalaAtual.id}/${id}`, 'DELETE');
+                
+                // Remover da lista local
+                conteudosEscala = conteudosEscala.filter(c => c.id !== id);
+                
+                atualizarConteudosEscala();
+                
+                // Mostrar mensagem de sucesso
+                alert('Conteúdo excluído com sucesso!');
+            } catch (error) {
+                console.error('Erro ao excluir conteúdo:', error);
+                alert('Ocorreu um erro ao excluir o conteúdo. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para abrir o modal de definir instrumento
+        function abrirModalDefinirInstrumento(membroId, nome) {
+            const membro = membrosMinisterio.find(m => m.id === membroId);
+            
+            if (!membro) return;
+            
+            document.getElementById('membro-escala-id').value = membro.id;
+            document.getElementById('membro-nome').value = nome;
+            document.getElementById('membro-instrumento').value = membro.instrumento || '';
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalInstrumento'));
+            modal.show();
+        }
+        
+        // Função para salvar instrumento
+        async function salvarInstrumento() {
+            const membroId = document.getElementById('membro-escala-id').value;
+            const instrumento = document.getElementById('membro-instrumento').value;
+            
+            if (!membroId) return;
+            
+            try {
+                const membro = membrosMinisterio.find(m => m.id === parseInt(membroId));
+                
+                if (membro) {
+                    // Atualizar membro com instrumento
+                    const membroAtualizado = { ...membro, instrumento };
+                    await fetchAPI(`membros/${membroId}`, 'PUT', membroAtualizado);
+                    
+                    // Atualizar na lista local
+                    const index = membrosMinisterio.findIndex(m => m.id === parseInt(membroId));
+                    if (index !== -1) {
+                        membrosMinisterio[index] = membroAtualizado;
+                    }
+                    
+                    // Fechar modal e atualizar tabela
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalInstrumento'));
+                    modal.hide();
+                    
+                    atualizarTabelaMembrosEscala();
+                    
+                    // Mostrar mensagem de sucesso
+                    alert('Instrumento definido com sucesso!');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar instrumento:', error);
+                alert('Ocorreu um erro ao definir o instrumento. Por favor, tente novamente.');
+            }
+        }
+    </script>
+</body>
+</html>

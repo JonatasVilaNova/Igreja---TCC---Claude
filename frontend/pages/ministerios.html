@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ministérios - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-church me-2"></i>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Ministérios</h1>
+                <button class="btn btn-primary admin-only" data-bs-toggle="modal" data-bs-target="#modalMinisterio">
+                    <i class="fas fa-plus me-2"></i>Novo Ministério
+                </button>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="pesquisar-ministerio" placeholder="Pesquisar ministério...">
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary active" id="btn-todos">Todos</button>
+                                <button type="button" class="btn btn-outline-primary" id="btn-meus">Meus Ministérios</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lista de Ministérios -->
+            <div class="row" id="lista-ministerios">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo/Editar Ministério -->
+    <div class="modal fade" id="modalMinisterio" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalMinisterioTitulo">Novo Ministério</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-ministerio">
+                        <input type="hidden" id="ministerio-id">
+                        <div class="mb-3">
+                            <label for="ministerio-nome" class="form-label">Nome do Ministério</label>
+                            <input type="text" class="form-control" id="ministerio-nome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ministerio-descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="ministerio-descricao" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3 pastor-only">
+                            <label for="ministerio-lider" class="form-label">Líder Responsável</label>
+                            <select class="form-select" id="ministerio-lider">
+                                <!-- Será preenchido via JavaScript -->
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-ministerio">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Membros do Ministério -->
+    <div class="modal fade" id="modalMembros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Membros do Ministério: <span id="ministerio-nome-titulo"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="admin-only mb-3">
+                        <button class="btn btn-sm btn-primary" id="btn-adicionar-membro">
+                            <i class="fas fa-plus me-2"></i>Adicionar Membro
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Função</th>
+                                    <th class="admin-only">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-membros">
+                                <!-- Será preenchido via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar/Editar Membro -->
+    <div class="modal fade" id="modalAdicionarMembro" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalMembroTitulo">Adicionar Membro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-membro">
+                        <input type="hidden" id="membro-id">
+                        <input type="hidden" id="membro-ministerio-id">
+                        <div class="mb-3">
+                            <label for="membro-usuario" class="form-label">Usuário</label>
+                            <select class="form-select" id="membro-usuario" required>
+                                <!-- Será preenchido via JavaScript -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="membro-funcao" class="form-label">Função</label>
+                            <input type="text" class="form-control" id="membro-funcao" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-membro">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <!-- Sidebar Loader -->
+    <script src="../js/sidebar-loader.js"></script>
+    
+    <script>
+        let ministerios = [];
+        let membrosMinisterio = [];
+        let usuarios = [];
+        let ministerioAtual = null;
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            const usuario = verificarLogin();
+
+            if (!usuario) return;
+
+            try {
+                // Carregar dados
+                ministerios = await fetchAPI('ministerios');
+                usuarios = await fetchAPI('usuarios');
+                
+                // Preencher lista de ministérios
+                atualizarListaMinisterios();
+                
+                // Preencher select de líderes
+                const selectLider = document.getElementById('ministerio-lider');
+                selectLider.innerHTML = '<option value="">Selecione um líder</option>';
+                
+                usuarios.filter(u => u.tipoPerfil === PERFIS.ADMIN || u.tipoPerfil === PERFIS.PASTOR).forEach(u => {
+                    const option = document.createElement('option');
+                    option.value = u.id;
+                    option.textContent = u.nome;
+                    selectLider.appendChild(option);
+                });
+                
+                // Configurar eventos
+                document.getElementById('btn-salvar-ministerio').addEventListener('click', salvarMinisterio);
+                document.getElementById('btn-salvar-membro').addEventListener('click', salvarMembro);
+                document.getElementById('btn-adicionar-membro').addEventListener('click', abrirModalAdicionarMembro);
+                document.getElementById('btn-todos').addEventListener('click', () => {
+                    document.getElementById('btn-todos').classList.add('active');
+                    document.getElementById('btn-meus').classList.remove('active');
+                    atualizarListaMinisterios();
+                });
+                document.getElementById('btn-meus').addEventListener('click', () => {
+                    document.getElementById('btn-meus').classList.add('active');
+                    document.getElementById('btn-todos').classList.remove('active');
+                    atualizarListaMinisterios(true);
+                });
+                document.getElementById('pesquisar-ministerio').addEventListener('input', atualizarListaMinisterios);
+                
+                // Resetar formulário quando o modal for fechado
+                const modalMinisterio = document.getElementById('modalMinisterio');
+                modalMinisterio.addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('form-ministerio').reset();
+                    document.getElementById('ministerio-id').value = '';
+                    document.getElementById('modalMinisterioTitulo').textContent = 'Novo Ministério';
+                });
+                
+                const modalAdicionarMembro = document.getElementById('modalAdicionarMembro');
+                modalAdicionarMembro.addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('form-membro').reset();
+                    document.getElementById('membro-id').value = '';
+                });
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            }
+        });
+        
+        // Função para atualizar a lista de ministérios
+        function atualizarListaMinisterios(apenasMinisteriosUsuario = false) {
+            const usuario = verificarLogin();
+            const listaMinisterios = document.getElementById('lista-ministerios');
+            const pesquisa = document.getElementById('pesquisar-ministerio').value.toLowerCase();
+            
+            let ministeriosFiltrados = [...ministerios];
+            
+            // Filtrar por pesquisa
+            if (pesquisa) {
+                ministeriosFiltrados = ministeriosFiltrados.filter(m => 
+                    m.nome.toLowerCase().includes(pesquisa) || 
+                    m.descricao.toLowerCase().includes(pesquisa)
+                );
+            }
+            
+            // Filtrar apenas ministérios do usuário
+            if (apenasMinisteriosUsuario) {
+                ministeriosFiltrados = ministeriosFiltrados.filter(m => m.idLider === usuario.id);
+            }
+            
+            listaMinisterios.innerHTML = '';
+            
+            if (ministeriosFiltrados.length === 0) {
+                listaMinisterios.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            Nenhum ministério encontrado.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            ministeriosFiltrados.forEach(ministerio => {
+                const lider = usuarios.find(u => u.id === ministerio.idLider);
+                const col = document.createElement('div');
+                col.className = 'col-md-6 col-lg-4 mb-4';
+                
+                col.innerHTML = `
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">${ministerio.nome}</h5>
+                            <p class="card-text text-muted">${ministerio.descricao}</p>
+                            <p class="card-text"><small class="text-muted">Líder: ${lider ? lider.nome : 'Não definido'}</small></p>
+                        </div>
+                        <div class="card-footer bg-white border-0">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary ver-membros" data-id="${ministerio.id}">
+                                    <i class="fas fa-users me-1"></i> Membros
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success admin-only editar-ministerio" data-id="${ministerio.id}">
+                                    <i class="fas fa-edit me-1"></i> Editar
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger admin-only excluir-ministerio" data-id="${ministerio.id}">
+                                    <i class="fas fa-trash me-1"></i> Excluir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                listaMinisterios.appendChild(col);
+            });
+            
+            // Configurar eventos dos botões
+            document.querySelectorAll('.ver-membros').forEach(btn => {
+                btn.addEventListener('click', () => abrirModalMembros(parseInt(btn.dataset.id)));
+            });
+            
+            document.querySelectorAll('.editar-ministerio').forEach(btn => {
+                btn.addEventListener('click', () => abrirModalEditarMinisterio(parseInt(btn.dataset.id)));
+            });
+            
+            document.querySelectorAll('.excluir-ministerio').forEach(btn => {
+                btn.addEventListener('click', () => excluirMinisterio(parseInt(btn.dataset.id)));
+            });
+        }
+        
+        // Função para abrir o modal de edição de ministério
+        function abrirModalEditarMinisterio(id) {
+            const ministerio = ministerios.find(m => m.id === id);
+            
+            if (!ministerio) return;
+            
+            document.getElementById('ministerio-id').value = ministerio.id;
+            document.getElementById('ministerio-nome').value = ministerio.nome;
+            document.getElementById('ministerio-descricao').value = ministerio.descricao;
+            document.getElementById('ministerio-lider').value = ministerio.idLider || '';
+            
+            document.getElementById('modalMinisterioTitulo').textContent = 'Editar Ministério';
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalMinisterio'));
+            modal.show();
+        }
+        
+        // Função para salvar ministério (novo ou edição)
+        async function salvarMinisterio() {
+            const id = document.getElementById('ministerio-id').value;
+            const nome = document.getElementById('ministerio-nome').value;
+            const descricao = document.getElementById('ministerio-descricao').value;
+            const idLider = document.getElementById('ministerio-lider').value;
+            
+            if (!nome || !descricao) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            try {
+                const ministerio = {
+                    nome,
+                    descricao,
+                    idLider: idLider ? parseInt(idLider) : null
+                };
+                
+                let response;
+                
+                if (id) {
+                    // Editar ministério existente
+                    ministerio.id = parseInt(id);
+                    response = await fetchAPI(`ministerios/${id}`, 'PUT', ministerio);
+                    
+                    // Atualizar na lista local
+                    const index = ministerios.findIndex(m => m.id === parseInt(id));
+                    if (index !== -1) {
+                        ministerios[index] = response;
+                    }
+                } else {
+                    // Criar novo ministério
+                    response = await fetchAPI('ministerios', 'POST', ministerio);
+                    ministerios.push(response);
+                }
+                
+                // Fechar modal e atualizar lista
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalMinisterio'));
+                modal.hide();
+                
+                atualizarListaMinisterios();
+            } catch (error) {
+                console.error('Erro ao salvar ministério:', error);
+                alert('Ocorreu um erro ao salvar o ministério. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para excluir ministério
+        async function excluirMinisterio(id) {
+            if (!confirm('Tem certeza que deseja excluir este ministério? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+            
+            try {
+                await fetchAPI(`ministerios/${id}`, 'DELETE');
+                
+                // Remover da lista local
+                ministerios = ministerios.filter(m => m.id !== id);
+                
+                atualizarListaMinisterios();
+            } catch (error) {
+                console.error('Erro ao excluir ministério:', error);
+                alert('Ocorreu um erro ao excluir o ministério. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para abrir o modal de membros
+        async function abrirModalMembros(id) {
+            ministerioAtual = id;
+            const ministerio = ministerios.find(m => m.id === id);
+            
+            if (!ministerio) return;
+            
+            try {
+                // Carregar membros do ministério
+                membrosMinisterio = await fetchAPI(`membros/ministerio/${id}`);
+                
+                document.getElementById('ministerio-nome-titulo').textContent = ministerio.nome;
+                
+                atualizarTabelaMembros();
+                
+                const modal = new bootstrap.Modal(document.getElementById('modalMembros'));
+                modal.show();
+            } catch (error) {
+                console.error('Erro ao carregar membros:', error);
+                alert('Ocorreu um erro ao carregar os membros do ministério. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para atualizar a tabela de membros
+        function atualizarTabelaMembros() {
+            const tabelaMembros = document.getElementById('tabela-membros');
+            tabelaMembros.innerHTML = '';
+            
+            if (membrosMinisterio.length === 0) {
+                tabelaMembros.innerHTML = '<tr><td colspan="3" class="text-center">Nenhum membro cadastrado neste ministério.</td></tr>';
+                return;
+            }
+            
+            membrosMinisterio.forEach(membro => {
+                const usuario = usuarios.find(u => u.id === membro.idUsuario);
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${usuario ? usuario.nome : 'Usuário não encontrado'}</td>
+                    <td>${membro.funcao}</td>
+                    <td class="admin-only">
+                        <button class="btn btn-sm btn-outline-success editar-membro" data-id="${membro.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger excluir-membro" data-id="${membro.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tabelaMembros.appendChild(row);
+            });
+            
+            // Configurar eventos dos botões
+            document.querySelectorAll('.editar-membro').forEach(btn => {
+                btn.addEventListener('click', () => abrirModalEditarMembro(parseInt(btn.dataset.id)));
+            });
+            
+            document.querySelectorAll('.excluir-membro').forEach(btn => {
+                btn.addEventListener('click', () => excluirMembro(parseInt(btn.dataset.id)));
+            });
+        }
+        
+        // Função para abrir o modal de adicionar membro
+        function abrirModalAdicionarMembro() {
+            document.getElementById('membro-id').value = '';
+            document.getElementById('membro-ministerio-id').value = ministerioAtual;
+            document.getElementById('modalMembroTitulo').textContent = 'Adicionar Membro';
+            
+            // Preencher select de usuários
+            const selectUsuario = document.getElementById('membro-usuario');
+            selectUsuario.innerHTML = '<option value="">Selecione um usuário</option>';
+            
+            // Filtrar usuários que ainda não são membros deste ministério
+            const usuariosDisponiveis = usuarios.filter(u => 
+                !membrosMinisterio.some(m => m.idUsuario === u.id)
+            );
+            
+            usuariosDisponiveis.forEach(u => {
+                const option = document.createElement('option');
+                option.value = u.id;
+                option.textContent = u.nome;
+                selectUsuario.appendChild(option);
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalAdicionarMembro'));
+            modal.show();
+        }
+        
+        // Função para abrir o modal de editar membro
+        function abrirModalEditarMembro(id) {
+            const membro = membrosMinisterio.find(m => m.id === id);
+            
+            if (!membro) return;
+            
+            document.getElementById('membro-id').value = membro.id;
+            document.getElementById('membro-ministerio-id').value = membro.idMinisterio;
+            document.getElementById('membro-funcao').value = membro.funcao;
+            document.getElementById('modalMembroTitulo').textContent = 'Editar Membro';
+            
+            // Preencher select de usuários
+            const selectUsuario = document.getElementById('membro-usuario');
+            selectUsuario.innerHTML = '';
+            
+            const usuario = usuarios.find(u => u.id === membro.idUsuario);
+            if (usuario) {
+                const option = document.createElement('option');
+                option.value = usuario.id;
+                option.textContent = usuario.nome;
+                selectUsuario.appendChild(option);
+            }
+            
+            // Desabilitar select de usuário na edição
+            selectUsuario.disabled = true;
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalAdicionarMembro'));
+            modal.show();
+        }
+        
+        // Função para salvar membro (novo ou edição)
+        async function salvarMembro() {
+            const id = document.getElementById('membro-id').value;
+            const idMinisterio = document.getElementById('membro-ministerio-id').value;
+            const idUsuario = document.getElementById('membro-usuario').value;
+            const funcao = document.getElementById('membro-funcao').value;
+            
+            if ((!idUsuario && !id) || !funcao) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            try {
+                const membro = {
+                    idMinisterio: parseInt(idMinisterio),
+                    funcao
+                };
+                
+                if (!id) {
+                    // Adicionar idUsuario apenas para novos membros
+                    membro.idUsuario = parseInt(idUsuario);
+                }
+                
+                let response;
+                
+                if (id) {
+                    // Editar membro existente
+                    membro.id = parseInt(id);
+                    response = await fetchAPI(`membros/${id}`, 'PUT', membro);
+                    
+                    // Atualizar na lista local
+                    const index = membrosMinisterio.findIndex(m => m.id === parseInt(id));
+                    if (index !== -1) {
+                        membrosMinisterio[index] = response;
+                    }
+                } else {
+                    // Criar novo membro
+                    response = await fetchAPI('membros', 'POST', membro);
+                    membrosMinisterio.push(response);
+                }
+                
+                // Fechar modal e atualizar tabela
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalAdicionarMembro'));
+                modal.hide();
+                
+                atualizarTabelaMembros();
+            } catch (error) {
+                console.error('Erro ao salvar membro:', error);
+                alert('Ocorreu um erro ao salvar o membro. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para excluir membro
+        async function excluirMembro(id) {
+            if (!confirm('Tem certeza que deseja remover este membro do ministério?')) {
+                return;
+            }
+            
+            try {
+                await fetchAPI(`membros/${id}`, 'DELETE');
+                
+                // Remover da lista local
+                membrosMinisterio = membrosMinisterio.filter(m => m.id !== id);
+                
+                atualizarTabelaMembros();
+            } catch (error) {
+                console.error('Erro ao excluir membro:', error);
+                alert('Ocorreu um erro ao excluir o membro. Por favor, tente novamente.');
+            }
+        }
+    </script>
+</body>
+</html>

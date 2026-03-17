@@ -1,0 +1,497 @@
+/* Variáveis de Tema - Fácil personalização */
+:root {
+  /* Cores principais */
+  --primary-color: #198754; /* Verde (era azul #0d6efd) */
+  --primary-color-dark: #157347; /* Verde escuro */
+  --primary-color-light: #d1e7dd; /* Verde claro */
+  --secondary-color: #6c757d;
+  --background-color: #f8f9fa;
+  --text-color: #212529;
+  --text-light: #adb5bd;
+  --text-on-primary: #ffffff;
+  
+  /* Cores de componentes */
+  --sidebar-bg: #343a40;
+  --sidebar-text: var(--text-light);
+  --sidebar-active: var(--text-on-primary);
+  --sidebar-hover-bg: #495057;
+  
+  /* Configurações de logo */
+  --logo-url: url('../images/logo.png');
+  --logo-width: 32px;
+  --logo-height: 32px;
+  
+  /* Espaçamentos */
+  --navbar-height: 60px;
+  --sidebar-width: 250px;
+}
+
+/* Estilos Globais */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--background-color);
+  padding-top: var(--navbar-height); /* Espaço para a navbar fixa */
+}
+
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding: 20px;
+  transition: margin-left 0.3s;
+}
+
+/* Estilos da Sidebar */
+.sidebar {
+  height: 100vh;
+  width: var(--sidebar-width);
+  position: fixed;
+  top: var(--navbar-height); /* Ajustado para ficar abaixo da navbar */
+  left: 0;
+  background-color: var(--sidebar-bg);
+  transition: width 0.3s;
+  z-index: 1000;
+  overflow-y: auto; /* Permitir rolagem quando o conteúdo for maior que a altura */
+}
+
+.sidebar .nav-link {
+  color: var(--sidebar-text);
+  padding: 10px 15px;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  color: var(--sidebar-active);
+  background-color: var(--sidebar-hover-bg);
+}
+
+.sidebar .nav-link i {
+  margin-right: 10px;
+}
+
+/* Estilos da Navbar */
+.navbar {
+  background-color: var(--primary-color) !important; /* Forçar cor do tema */
+}
+
+.navbar-brand {
+  font-weight: bold;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: var(--text-on-primary);
+}
+
+/* Logo personalizada */
+.navbar-logo {
+  background-image: var(--logo-url);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: var(--logo-width);
+  height: var(--logo-height);
+  display: inline-block;
+  margin-right: 10px;
+}
+
+/* Estilos para Tabelas */
+.table thead {
+  background-color: #e9ecef;
+}
+
+/* Estilos para Modais */
+.modal-header {
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+}
+
+.modal-header .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Estilos para Forms */
+.form-label {
+  font-weight: 500;
+}
+
+/* Botões temáticos */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color-dark);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-color-dark);
+  border-color: var(--primary-color-dark);
+}
+
+.btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* Elementos com cor primária */
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.border-primary {
+  border-color: var(--primary-color) !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 0;
+    overflow: hidden;
+  }
+  
+  .sidebar.show {
+    width: var(--sidebar-width);
+    overflow-y: auto;
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  /* Botão de toggle para sidebar mobile */
+  .sidebar-toggle {
+    display: block;
+    position: fixed;
+    top: var(--navbar-height);
+    left: 0;
+    z-index: 1001;
+    padding: 10px;
+  }
+  
+  /* Ajuste para o botão de toggle da navbar */
+  .navbar-toggler {
+    margin-left: auto;
+  }
+  
+  /* Ajuste para dropdown de usuário em mobile */
+  .navbar .dropdown-menu {
+    position: absolute;
+    right: 0;
+    left: auto;
+  }
+}
+
+/* Página de Login */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0; /* Remover padding-top na página de login */
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Página de Registro */
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0; /* Remover padding-top na página de registro */
+}
+
+.register-card {
+  width: 100%;
+  max-width: 500px;
+}
+
+/* Estilos para membros de escala */
+.escala-membros {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: var(--primary-color-light);
+  border-radius: 5px;
+}
+
+.escala-membros-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.escala-membro-item {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.escala-membro-item:last-child {
+  border-bottom: none;
+}
+
+/* Estilos para a página da Bíblia */
+.biblia-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--navbar-height) - 40px);
+}
+
+.biblia-header {
+  padding: 15px;
+  background-color: var(--primary-color-light);
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.biblia-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.biblia-verse {
+  margin-bottom: 10px;
+}
+
+.biblia-verse-number {
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-right: 5px;
+}
+
+.biblia-chapter-title {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+/* Estilos para a página de Apresentação (Holyrics) */
+.apresentacao-container {
+  height: calc(100vh - var(--navbar-height) - 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+.apresentacao-header {
+  padding: 15px;
+  background-color: var(--primary-color-light);
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.apresentacao-frame {
+  flex: 1;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.apresentacao-offline {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Estilos para a página do YouTube */
+.youtube-container {
+  height: calc(100vh - var(--navbar-height) - 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+.youtube-header {
+  padding: 15px;
+  background-color: var(--primary-color-light);
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.youtube-frame {
+  flex: 1;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.youtube-videos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.youtube-video-card {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.youtube-video-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Estilos para a página Ao Vivo */
+.aovivo-container {
+  height: calc(100vh - var(--navbar-height) - 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+.aovivo-header {
+  padding: 15px;
+  background-color: var(--primary-color-light);
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.aovivo-frame {
+  flex: 1;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.aovivo-offline {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Estilos para a página de Ordem de Culto */
+.ordem-culto-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.ordem-culto-header {
+  padding: 15px;
+  background-color: var(--primary-color-light);
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.ordem-culto-content {
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  padding: 20px;
+}
+
+.ordem-culto-item {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background-color: #f8f9fa;
+  border-left: 4px solid var(--primary-color);
+}
+
+.ordem-culto-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ordem-culto-item-title {
+  font-weight: bold;
+}
+
+.ordem-culto-item-time {
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+}
+
+.ordem-culto-item-description {
+  margin-top: 5px;
+  color: var(--text-color);
+}
+
+/* Estilos para a página de Plataformas */
+.plataformas-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.plataforma-card {
+  transition: transform 0.2s;
+}
+
+.plataforma-card:hover {
+  transform: translateY(-5px);
+}
+
+.plataforma-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+/* Estilos para upload de arquivos */
+.upload-dropzone {
+  border: 2px dashed var(--primary-color-light);
+  border-radius: 5px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.upload-dropzone:hover {
+  background-color: var(--primary-color-light);
+}
+
+.upload-dropzone i {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.upload-file-list {
+  margin-top: 20px;
+}
+
+.upload-file-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+.upload-file-icon {
+  margin-right: 15px;
+  font-size: 1.5rem;
+}
+
+.upload-file-info {
+  flex: 1;
+}
+
+.upload-file-name {
+  font-weight: bold;
+}
+
+.upload-file-size {
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+}
+
+.upload-file-actions {
+  display: flex;
+  gap: 5px;
+}

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataformas - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <span class="navbar-logo"></span>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+    
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="plataformas-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>Plataformas</h1>
+                    <button class="btn btn-primary admin-only" data-bs-toggle="modal" data-bs-target="#modalPlataforma">
+                        <i class="fas fa-plus me-2"></i>Nova Plataforma
+                    </button>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <p>Gerencie plataformas de músicas, cifras e partituras para uso nas escalas. Estas plataformas estarão disponíveis para adicionar links nos detalhes de cada escala.</p>
+                    </div>
+                </div>
+                
+                <div id="plataformas-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-3">Carregando plataformas...</p>
+                </div>
+                
+                <div id="plataformas-lista" class="row g-4" style="display: none;">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+                
+                <div id="plataformas-vazio" class="alert alert-info" style="display: none;">
+                    <i class="fas fa-info-circle me-2"></i>Nenhuma plataforma cadastrada. Clique em "Nova Plataforma" para adicionar.
+                </div>
+                
+                <div id="plataformas-erro" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-circle me-2"></i>Ocorreu um erro ao carregar as plataformas. Por favor, tente novamente.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nova/Editar Plataforma -->
+    <div class="modal fade" id="modalPlataforma" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalPlataformaTitulo">Nova Plataforma</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-plataforma">
+                        <input type="hidden" id="plataforma-id">
+                        <div class="mb-3">
+                            <label for="plataforma-nome" class="form-label">Nome da Plataforma</label>
+                            <input type="text" class="form-control" id="plataforma-nome" placeholder="Ex: Cifra Club, Deezer, Spotify" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="plataforma-url" class="form-label">URL Base</label>
+                            <input type="url" class="form-control" id="plataforma-url" placeholder="Ex: https://www.cifraclub.com.br" required>
+                            <div class="form-text">URL base da plataforma, sem parâmetros de busca.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="plataforma-icone" class="form-label">Ícone</label>
+                            <select class="form-select" id="plataforma-icone" required>
+                                <option value="">Selecione um ícone</option>
+                                <option value="fa-music">Música</option>
+                                <option value="fa-guitar">Violão/Guitarra</option>
+                                <option value="fa-file-audio">Áudio</option>
+                                <option value="fa-headphones">Fones</option>
+                                <option value="fa-play">Play</option>
+                                <option value="fa-spotify">Spotify</option>
+                                <option value="fa-youtube">YouTube</option>
+                                <option value="fa-soundcloud">SoundCloud</option>
+                                <option value="fa-apple">Apple Music</option>
+                                <option value="fa-amazon">Amazon Music</option>
+                                <option value="fa-file-pdf">PDF</option>
+                                <option value="fa-file-image">Imagem</option>
+                                <option value="fa-link">Link Genérico</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="plataforma-cor" class="form-label">Cor</label>
+                            <input type="color" class="form-control form-control-color" id="plataforma-cor" value="#0d6efd" title="Escolha uma cor">
+                        </div>
+                        <div class="mb-3">
+                            <label for="plataforma-descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="plataforma-descricao" rows="3" placeholder="Descreva brevemente esta plataforma"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="plataforma-ativo" checked>
+                                <label class="form-check-label" for="plataforma-ativo">
+                                    Plataforma ativa
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-plataforma">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="modalConfirmacaoExclusao" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir esta plataforma? Esta ação não pode ser desfeita.</p>
+                    <p class="text-danger">Atenção: Todos os links associados a esta plataforma nas escalas serão removidos.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <script src="../js/sidebar-loader.js"></script>
+    
+    <script>
+        // Lista de plataformas
+        let plataformas = [];
+        let plataformaParaExcluir = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar login
+            const usuario = verificarLogin();
+            
+            if (!usuario) return;
+            
+            // Verificar permissões (usar perfil normalizado)
+            const perfil = usuario.tipoPerfil || usuario.perfil || (window.usuarioAtual ? (window.usuarioAtual.tipoPerfil || window.usuarioAtual.perfil) : null);
+            if (perfil !== 'pastor' && perfil !== 'admin') {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            // Configurar sidebar mobile
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            if (sidebarToggleBtn) {
+                sidebarToggleBtn.addEventListener('click', function() {
+                    document.querySelector('.sidebar').classList.toggle('show');
+                });
+            }
+            
+            // Configurar eventos
+            document.getElementById('btn-salvar-plataforma').addEventListener('click', salvarPlataforma);
+            document.getElementById('btn-confirmar-exclusao').addEventListener('click', confirmarExclusaoPlataforma);
+            
+            // Carregar plataformas
+            carregarPlataformas();
+        });
+        
+        // Dados iniciais das plataformas (carregados uma única vez)
+        const plataformasIniciais = [
+            {
+                id: 1,
+                nome: 'Cifra Club',
+                url: 'https://www.cifraclub.com.br',
+                icone: 'fa-guitar',
+                cor: '#2D9CDB',
+                descricao: 'Plataforma de cifras e tablaturas para violão, guitarra, baixo, etc.',
+                ativo: true
+            },
+            {
+                id: 2,
+                nome: 'YouTube',
+                url: 'https://www.youtube.com',
+                icone: 'fa-youtube',
+                cor: '#FF0000',
+                descricao: 'Plataforma de vídeos com músicas, tutoriais e apresentações.',
+                ativo: true
+            },
+            {
+                id: 3,
+                nome: 'Spotify',
+                url: 'https://open.spotify.com',
+                icone: 'fa-spotify',
+                cor: '#1DB954',
+                descricao: 'Serviço de streaming de música com milhões de faixas.',
+                ativo: true
+            },
+            {
+                id: 4,
+                nome: 'Deezer',
+                url: 'https://www.deezer.com',
+                icone: 'fa-music',
+                cor: '#00C7F2',
+                descricao: 'Serviço de streaming de música com playlists e rádios.',
+                ativo: true
+            },
+            {
+                id: 5,
+                nome: 'Google Drive',
+                url: 'https://drive.google.com',
+                icone: 'fa-file-pdf',
+                cor: '#4285F4',
+                descricao: 'Armazenamento de arquivos para partituras e letras em PDF.',
+                ativo: true
+            }
+        ];
+
+        // Função para carregar plataformas (apenas na primeira vez)
+        async function carregarPlataformas() {
+            document.getElementById('plataformas-loading').style.display = 'block';
+            document.getElementById('plataformas-lista').style.display = 'none';
+            document.getElementById('plataformas-vazio').style.display = 'none';
+            document.getElementById('plataformas-erro').style.display = 'none';
+
+            try {
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Inicializar array apenas se ainda vazio (não sobrescreve edições)
+                if (plataformas.length === 0) {
+                    plataformas = [...plataformasIniciais];
+                }
+
+                document.getElementById('plataformas-loading').style.display = 'none';
+                renderizarPlataformas();
+            } catch (error) {
+                console.error('Erro ao carregar plataformas:', error);
+                document.getElementById('plataformas-loading').style.display = 'none';
+                document.getElementById('plataformas-erro').style.display = 'block';
+            }
+        }
+
+        // Função para renderizar a lista atual de plataformas (sem resetar os dados)
+        function renderizarPlataformas() {
+            if (plataformas.length === 0) {
+                document.getElementById('plataformas-lista').style.display = 'none';
+                document.getElementById('plataformas-vazio').style.display = 'block';
+                return;
+            }
+
+            const plataformasContainer = document.getElementById('plataformas-lista');
+            plataformasContainer.innerHTML = '';
+
+            plataformas.forEach(plataforma => {
+                const plataformaCard = document.createElement('div');
+                plataformaCard.className = 'col-md-4 col-lg-3';
+
+                const iconClass = ['fa-spotify', 'fa-youtube', 'fa-soundcloud', 'fa-apple', 'fa-amazon'].includes(plataforma.icone)
+                    ? `fab ${plataforma.icone}`
+                    : `fas ${plataforma.icone}`;
+
+                plataformaCard.innerHTML = `
+                    <div class="card h-100 plataforma-card">
+                        <div class="card-body text-center">
+                            <div class="plataforma-icon" style="color: ${plataforma.cor}">
+                                <i class="${iconClass} fa-3x"></i>
+                            </div>
+                            <h5 class="card-title mt-2">${plataforma.nome}</h5>
+                            <p class="card-text small text-muted">${plataforma.descricao || 'Sem descrição'}</p>
+                            <a href="${plataforma.url}" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                                <i class="fas fa-external-link-alt me-1"></i> Visitar
+                            </a>
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-success editar-plataforma" data-id="${plataforma.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger excluir-plataforma" data-id="${plataforma.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <span class="badge ${plataforma.ativo ? 'bg-success' : 'bg-secondary'}">
+                                ${plataforma.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                plataformasContainer.appendChild(plataformaCard);
+            });
+
+            document.querySelectorAll('.editar-plataforma').forEach(btn => {
+                btn.addEventListener('click', () => abrirModalEditarPlataforma(parseInt(btn.dataset.id)));
+            });
+
+            document.querySelectorAll('.excluir-plataforma').forEach(btn => {
+                btn.addEventListener('click', () => abrirModalExcluirPlataforma(parseInt(btn.dataset.id)));
+            });
+
+            document.getElementById('plataformas-lista').style.display = 'flex';
+            document.getElementById('plataformas-vazio').style.display = 'none';
+        }
+        
+        // Função para abrir modal de edição
+        function abrirModalEditarPlataforma(id) {
+            const plataforma = plataformas.find(p => p.id === id);
+            
+            if (!plataforma) return;
+            
+            // Preencher formulário
+            document.getElementById('plataforma-id').value = plataforma.id;
+            document.getElementById('plataforma-nome').value = plataforma.nome;
+            document.getElementById('plataforma-url').value = plataforma.url;
+            document.getElementById('plataforma-icone').value = plataforma.icone;
+            document.getElementById('plataforma-cor').value = plataforma.cor;
+            document.getElementById('plataforma-descricao').value = plataforma.descricao || '';
+            document.getElementById('plataforma-ativo').checked = plataforma.ativo;
+            
+            // Atualizar título do modal
+            document.getElementById('modalPlataformaTitulo').textContent = 'Editar Plataforma';
+            
+            // Abrir modal
+            const modal = new bootstrap.Modal(document.getElementById('modalPlataforma'));
+            modal.show();
+        }
+        
+        // Função para abrir modal de exclusão
+        function abrirModalExcluirPlataforma(id) {
+            plataformaParaExcluir = id;
+            
+            // Abrir modal de confirmação
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmacaoExclusao'));
+            modal.show();
+        }
+        
+        // Função para salvar plataforma
+        async function salvarPlataforma() {
+            // Validar formulário
+            const form = document.getElementById('form-plataforma');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Obter dados do formulário
+            const id = document.getElementById('plataforma-id').value;
+            const nome = document.getElementById('plataforma-nome').value;
+            const url = document.getElementById('plataforma-url').value;
+            const icone = document.getElementById('plataforma-icone').value;
+            const cor = document.getElementById('plataforma-cor').value;
+            const descricao = document.getElementById('plataforma-descricao').value;
+            const ativo = document.getElementById('plataforma-ativo').checked;
+            
+            try {
+                // Em uma implementação real, aqui seria feita uma chamada à API
+                // Para esta demonstração, vamos simular uma resposta
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                if (id) {
+                    // Editar plataforma existente
+                    const index = plataformas.findIndex(p => p.id === parseInt(id));
+                    
+                    if (index !== -1) {
+                        plataformas[index] = {
+                            id: parseInt(id),
+                            nome,
+                            url,
+                            icone,
+                            cor,
+                            descricao,
+                            ativo
+                        };
+                    }
+                } else {
+                    // Criar nova plataforma
+                    const novaPlataforma = {
+                        id: plataformas.length > 0 ? Math.max(...plataformas.map(p => p.id)) + 1 : 1,
+                        nome,
+                        url,
+                        icone,
+                        cor,
+                        descricao,
+                        ativo
+                    };
+                    
+                    plataformas.push(novaPlataforma);
+                }
+                
+                // Fechar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalPlataforma'));
+                modal.hide();
+
+                // Limpar formulário
+                document.getElementById('form-plataforma').reset();
+                document.getElementById('plataforma-id').value = '';
+                document.getElementById('modalPlataformaTitulo').textContent = 'Nova Plataforma';
+
+                // Re-renderizar lista sem resetar dados
+                renderizarPlataformas();
+
+                // Mostrar mensagem de sucesso
+                alert(id ? 'Plataforma atualizada com sucesso!' : 'Plataforma criada com sucesso!');
+            } catch (error) {
+                console.error('Erro ao salvar plataforma:', error);
+                alert('Ocorreu um erro ao salvar a plataforma. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para confirmar exclusão
+        async function confirmarExclusaoPlataforma() {
+            if (!plataformaParaExcluir) return;
+            
+            try {
+                // Em uma implementação real, aqui seria feita uma chamada à API
+                // Para esta demonstração, vamos simular uma resposta
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Remover plataforma da lista
+                plataformas = plataformas.filter(p => p.id !== plataformaParaExcluir);
+                
+                // Fechar modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExclusao'));
+                modal.hide();
+                
+                // Limpar plataforma para exclusão
+                plataformaParaExcluir = null;
+
+                // Re-renderizar lista sem resetar dados
+                renderizarPlataformas();
+                
+                // Mostrar mensagem de sucesso
+                alert('Plataforma excluída com sucesso!');
+            } catch (error) {
+                console.error('Erro ao excluir plataforma:', error);
+                alert('Ocorreu um erro ao excluir a plataforma. Por favor, tente novamente.');
+            }
+        }
+    </script>
+</body>
+</html>

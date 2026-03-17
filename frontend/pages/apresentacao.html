@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apresentação - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <span class="navbar-logo"></span>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="apresentacao-container">
+                <div class="apresentacao-header">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-6">
+                            <h1 class="mb-0">Apresentação</h1>
+                            <p class="text-muted mb-0">Visualize o conteúdo sendo apresentado no Holyrics</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <div class="d-flex justify-content-md-end align-items-center">
+                                <div id="status-conexao" class="me-3">
+                                    <span class="badge bg-secondary">Desconectado</span>
+                                </div>
+                                <button class="btn btn-primary" id="btn-reconectar">
+                                    <i class="fas fa-sync-alt me-2"></i>Reconectar
+                                </button>
+                                <button class="btn btn-outline-primary ms-2 admin-only" data-bs-toggle="modal" data-bs-target="#modalConfiguracao">
+                                    <i class="fas fa-cog me-2"></i>Configurar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="apresentacao-frame-container" style="display: none;">
+                    <iframe id="apresentacao-frame" class="apresentacao-frame" src="" frameborder="0" allowfullscreen></iframe>
+                </div>
+                
+                <div id="apresentacao-offline" class="apresentacao-offline">
+                    <div class="text-center">
+                        <i class="fas fa-tv fa-4x text-muted mb-3"></i>
+                        <h3>Apresentação não disponível</h3>
+                        <p class="text-muted">Não foi possível conectar ao servidor do Holyrics.</p>
+                        <p>Verifique se:</p>
+                        <ul class="text-start d-inline-block">
+                            <li>O Holyrics está em execução no computador da igreja</li>
+                            <li>O endereço IP está configurado corretamente</li>
+                            <li>Você está conectado à mesma rede da igreja</li>
+                        </ul>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" id="btn-reconectar-offline">
+                                <i class="fas fa-sync-alt me-2"></i>Tentar novamente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuração -->
+    <div class="modal fade" id="modalConfiguracao" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configuração do Holyrics</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-configuracao">
+                        <div class="mb-3">
+                            <label for="holyrics-ip" class="form-label">Endereço IP do Holyrics</label>
+                            <input type="text" class="form-control" id="holyrics-ip" placeholder="Ex: 192.168.1.100" required>
+                            <div class="form-text">Informe o endereço IP do computador onde o Holyrics está sendo executado.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="holyrics-porta" class="form-label">Porta</label>
+                            <input type="number" class="form-control" id="holyrics-porta" placeholder="Ex: 8080" value="8080" required>
+                            <div class="form-text">Porta padrão do Holyrics é 8080.</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="holyrics-ativar">
+                                <label class="form-check-label" for="holyrics-ativar">
+                                    Ativar integração com Holyrics
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-configuracao">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <!-- Sidebar Loader -->
+    <script src="../js/sidebar-loader.js"></script>
+    
+    <script>
+        // Configuração padrão
+        let configuracaoHolyrics = {
+            ip: '',
+            porta: 8080,
+            ativo: false
+        };
+        
+        // Intervalo de verificação
+        let intervaloVerificacao = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar login
+            const usuario = verificarLogin();
+            
+            if (!usuario) return;
+            
+            // Configurar sidebar mobile
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            if (sidebarToggleBtn) {
+                sidebarToggleBtn.addEventListener('click', function() {
+                    document.querySelector('.sidebar').classList.toggle('show');
+                });
+            }
+            
+            // Carregar configuração salva
+            carregarConfiguracao();
+            
+            // Configurar eventos
+            document.getElementById('btn-reconectar').addEventListener('click', verificarConexao);
+            document.getElementById('btn-reconectar-offline').addEventListener('click', verificarConexao);
+            document.getElementById('btn-salvar-configuracao').addEventListener('click', salvarConfiguracao);
+            
+            // Verificar conexão inicial
+            verificarConexao();
+            
+            // Iniciar verificação periódica
+            iniciarVerificacaoPeriodica();
+        });
+        
+        // Função para carregar configuração
+        function carregarConfiguracao() {
+            const configSalva = localStorage.getItem('configuracaoHolyrics');
+            
+            if (configSalva) {
+                configuracaoHolyrics = JSON.parse(configSalva);
+                
+                // Preencher formulário
+                document.getElementById('holyrics-ip').value = configuracaoHolyrics.ip;
+                document.getElementById('holyrics-porta').value = configuracaoHolyrics.porta;
+                document.getElementById('holyrics-ativar').checked = configuracaoHolyrics.ativo;
+            }
+        }
+        
+        // Função para salvar configuração
+        function salvarConfiguracao() {
+            const ip = document.getElementById('holyrics-ip').value.trim();
+            const porta = document.getElementById('holyrics-porta').value.trim();
+            const ativo = document.getElementById('holyrics-ativar').checked;
+            
+            if (!ip) {
+                alert('Por favor, informe o endereço IP do Holyrics.');
+                return;
+            }
+            
+            if (!porta) {
+                alert('Por favor, informe a porta do Holyrics.');
+                return;
+            }
+            
+            // Atualizar configuração
+            configuracaoHolyrics = {
+                ip,
+                porta,
+                ativo
+            };
+            
+            // Salvar no localStorage
+            localStorage.setItem('configuracaoHolyrics', JSON.stringify(configuracaoHolyrics));
+            
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfiguracao'));
+            modal.hide();
+            
+            // Verificar conexão
+            verificarConexao();
+            
+            // Mostrar mensagem de sucesso
+            alert('Configuração salva com sucesso!');
+        }
+        
+        // Função para verificar conexão com o Holyrics
+        async function verificarConexao() {
+            // Atualizar status
+            const statusConexao = document.getElementById('status-conexao');
+            statusConexao.innerHTML = '<span class="badge bg-warning">Verificando...</span>';
+            
+            // Verificar se a integração está ativa
+            if (!configuracaoHolyrics.ativo || !configuracaoHolyrics.ip) {
+                statusConexao.innerHTML = '<span class="badge bg-secondary">Desativado</span>';
+                document.getElementById('apresentacao-frame-container').style.display = 'none';
+                document.getElementById('apresentacao-offline').style.display = 'flex';
+                return;
+            }
+            
+            try {
+                // Em uma implementação real, aqui seria feita uma verificação de conectividade
+                // com o servidor do Holyrics. Para esta demonstração, vamos simular uma conexão.
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Simular conexão bem-sucedida (em produção, substituir por verificação real)
+                const conectado = Math.random() > 0.3; // 70% de chance de sucesso para demonstração
+                
+                if (conectado) {
+                    // Conexão bem-sucedida
+                    statusConexao.innerHTML = '<span class="badge bg-success">Conectado</span>';
+                    
+                    // Atualizar iframe
+                    const iframe = document.getElementById('apresentacao-frame');
+                    const url = `http://${configuracaoHolyrics.ip}:${configuracaoHolyrics.porta}`;
+                    
+                    // Em uma implementação real, este seria o URL correto para o Holyrics
+                    // Para demonstração, vamos usar uma página de exemplo
+                    iframe.src = 'about:blank'; // Limpar iframe
+                    
+                    // Mostrar iframe e esconder mensagem offline
+                    document.getElementById('apresentacao-frame-container').style.display = 'block';
+                    document.getElementById('apresentacao-offline').style.display = 'none';
+                    
+                    // Simular conteúdo do Holyrics
+                    setTimeout(() => {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        iframeDoc.open();
+                        iframeDoc.write(`
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta charset="UTF-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <title>Holyrics Simulação</title>
+                                <style>
+                                    body {
+                                        font-family: Arial, sans-serif;
+                                        background-color: #000;
+                                        color: #fff;
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                        justify-content: center;
+                                        height: 100vh;
+                                        margin: 0;
+                                        text-align: center;
+                                    }
+                                    .titulo {
+                                        font-size: 2rem;
+                                        margin-bottom: 2rem;
+                                    }
+                                    .letra {
+                                        font-size: 2.5rem;
+                                        line-height: 1.5;
+                                        max-width: 80%;
+                                    }
+                                    .verso-atual {
+                                        color: #ffcc00;
+                                    }
+                                    .proximo-verso {
+                                        color: #999;
+                                    }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="titulo">Grande é o Senhor</div>
+                                <div class="letra">
+                                    <div class="verso-atual">Grande é o Senhor e mui digno de louvores</div>
+                                    <div class="proximo-verso">Na cidade do nosso Deus, seu santo monte</div>
+                                </div>
+                            </body>
+                            </html>
+                        `);
+                        iframeDoc.close();
+                    }, 500);
+                } else {
+                    // Falha na conexão
+                    statusConexao.innerHTML = '<span class="badge bg-danger">Falha na conexão</span>';
+                    document.getElementById('apresentacao-frame-container').style.display = 'none';
+                    document.getElementById('apresentacao-offline').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Erro ao verificar conexão:', error);
+                statusConexao.innerHTML = '<span class="badge bg-danger">Erro</span>';
+                document.getElementById('apresentacao-frame-container').style.display = 'none';
+                document.getElementById('apresentacao-offline').style.display = 'flex';
+            }
+        }
+        
+        // Função para iniciar verificação periódica
+        function iniciarVerificacaoPeriodica() {
+            // Limpar intervalo existente
+            if (intervaloVerificacao) {
+                clearInterval(intervaloVerificacao);
+            }
+            
+            // Iniciar novo intervalo (a cada 30 segundos)
+            intervaloVerificacao = setInterval(verificarConexao, 30000);
+        }
+    </script>
+</body>
+</html>

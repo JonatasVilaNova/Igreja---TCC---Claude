@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <span class="navbar-logo"></span>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="youtube-container">
+                <div class="youtube-header">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-6">
+                            <h1 class="mb-0">Canal do YouTube</h1>
+                            <p class="text-muted mb-0" id="yt-nome-igreja">Igreja Batista de Nova Cintra</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <a href="https://www.youtube.com/c/IgrejaBatistadeNovaCintra" target="_blank" class="btn btn-danger" id="btn-abrir-canal">
+                                <i class="fab fa-youtube me-2"></i>Abrir no YouTube
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-body p-0">
+                        <div id="youtube-player" style="width: 100%; height: 500px;"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Vídeos Recentes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="youtube-loading" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                            <p class="mt-3">Carregando vídeos do canal...</p>
+                        </div>
+                        
+                        <div id="youtube-videos" class="youtube-videos" style="display: none;">
+                            <!-- Será preenchido via JavaScript -->
+                        </div>
+                        
+                        <div id="youtube-erro" class="alert alert-danger" style="display: none;">
+                            Ocorreu um erro ao carregar os vídeos do canal. Por favor, tente novamente.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- YouTube API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <script src="../js/sidebar-loader.js"></script>
+
+    <script>
+        // Configuração lida de config.js
+        const cfg = window.IGREJA_CONFIG;
+        const channelId = cfg.YOUTUBE_CHANNEL_ID;
+
+        // Aplicar valores dinâmicos da config
+        document.getElementById('yt-nome-igreja').textContent = cfg.NOME_IGREJA;
+        document.getElementById('btn-abrir-canal').href = cfg.YOUTUBE_CHANNEL_URL;
+        
+        // Variáveis para o player e lista de vídeos
+        let player;
+        let videoAtual = '';
+        let listaVideos = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar login
+            verificarLogin();
+            
+            // Configurar sidebar mobile
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            if (sidebarToggleBtn) {
+                sidebarToggleBtn.addEventListener('click', function() {
+                    document.querySelector('.sidebar').classList.toggle('show');
+                });
+            }
+            
+            // Carregar vídeos do canal
+            carregarVideosCanal();
+        });
+        
+        // Função para inicializar o player do YouTube
+        function onYouTubeIframeAPIReady() {
+            // Inicializar player com vídeo de placeholder
+            player = new YT.Player('youtube-player', {
+                height: '500',
+                width: '100%',
+                videoId: 'dQw4w9WgXcQ', // Placeholder, será substituído
+                playerVars: {
+                    'playsinline': 1,
+                    'rel': 0,
+                    'modestbranding': 1
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+        
+        // Função chamada quando o player estiver pronto
+        function onPlayerReady(event) {
+            // Se já temos vídeos carregados, atualizar o player
+            if (listaVideos.length > 0) {
+                carregarVideo(listaVideos[0].id);
+            }
+        }
+        
+        // Função para carregar vídeos do canal
+        async function carregarVideosCanal() {
+            // Mostrar loading
+            document.getElementById('youtube-loading').style.display = 'block';
+            document.getElementById('youtube-videos').style.display = 'none';
+            document.getElementById('youtube-erro').style.display = 'none';
+            
+            try {
+                // Em uma implementação real, aqui seria feita uma chamada à API do YouTube
+                // Para esta demonstração, vamos simular uma resposta
+                
+                // Simular delay de rede
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Simular resposta da API
+                listaVideos = [
+                    {
+                        id: 'dQw4w9WgXcQ',
+                        titulo: 'Culto de Domingo - 26/05/2025',
+                        descricao: 'Culto de celebração da Igreja Batista de Nova Cintra.',
+                        thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
+                        data: '26/05/2025'
+                    },
+                    {
+                        id: 'LACbVhgtx9I',
+                        titulo: 'Estudo Bíblico - O Livro de Tiago',
+                        descricao: 'Estudo bíblico semanal sobre o livro de Tiago.',
+                        thumbnail: 'https://img.youtube.com/vi/LACbVhgtx9I/mqdefault.jpg',
+                        data: '22/05/2025'
+                    },
+                    {
+                        id: '9bZkp7q19f0',
+                        titulo: 'Culto de Louvor e Adoração',
+                        descricao: 'Momento especial de louvor e adoração.',
+                        thumbnail: 'https://img.youtube.com/vi/9bZkp7q19f0/mqdefault.jpg',
+                        data: '19/05/2025'
+                    },
+                    {
+                        id: 'JGwWNGJdvx8',
+                        titulo: 'Encontro de Jovens - Maio 2025',
+                        descricao: 'Encontro mensal dos jovens da igreja.',
+                        thumbnail: 'https://img.youtube.com/vi/JGwWNGJdvx8/mqdefault.jpg',
+                        data: '15/05/2025'
+                    },
+                    {
+                        id: 'kJQP7kiw5Fk',
+                        titulo: 'Culto de Domingo - 12/05/2025',
+                        descricao: 'Culto de celebração da Igreja Batista de Nova Cintra.',
+                        thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/mqdefault.jpg',
+                        data: '12/05/2025'
+                    },
+                    {
+                        id: 'RgKAFK5djSk',
+                        titulo: 'Escola Bíblica Dominical - Lição 19',
+                        descricao: 'Aula da Escola Bíblica Dominical sobre a lição 19.',
+                        thumbnail: 'https://img.youtube.com/vi/RgKAFK5djSk/mqdefault.jpg',
+                        data: '12/05/2025'
+                    }
+                ];
+                
+                // Preencher lista de vídeos
+                const videosContainer = document.getElementById('youtube-videos');
+                videosContainer.innerHTML = '';
+                
+                listaVideos.forEach(video => {
+                    const videoCard = document.createElement('div');
+                    videoCard.className = 'card youtube-video-card';
+                    videoCard.dataset.videoId = video.id;
+                    
+                    videoCard.innerHTML = `
+                        <img src="${video.thumbnail}" class="card-img-top" alt="${video.titulo}">
+                        <div class="card-body">
+                            <h5 class="card-title">${video.titulo}</h5>
+                            <p class="card-text text-muted">${video.data}</p>
+                        </div>
+                    `;
+                    
+                    videoCard.addEventListener('click', function() {
+                        carregarVideo(video.id);
+                    });
+                    
+                    videosContainer.appendChild(videoCard);
+                });
+                
+                // Mostrar lista de vídeos
+                document.getElementById('youtube-loading').style.display = 'none';
+                document.getElementById('youtube-videos').style.display = 'grid';
+                
+                // Carregar primeiro vídeo no player
+                if (listaVideos.length > 0 && player && player.loadVideoById) {
+                    carregarVideo(listaVideos[0].id);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar vídeos do canal:', error);
+                document.getElementById('youtube-loading').style.display = 'none';
+                document.getElementById('youtube-erro').style.display = 'block';
+            }
+        }
+        
+        // Função para carregar um vídeo específico no player
+        function carregarVideo(videoId) {
+            if (player && player.loadVideoById) {
+                player.loadVideoById(videoId);
+                videoAtual = videoId;
+                
+                // Destacar vídeo selecionado
+                document.querySelectorAll('.youtube-video-card').forEach(card => {
+                    if (card.dataset.videoId === videoId) {
+                        card.classList.add('border-primary');
+                    } else {
+                        card.classList.remove('border-primary');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

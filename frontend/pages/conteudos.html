@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conteúdos - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-church me-2"></i>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Conteúdos</h1>
+                <button class="btn btn-primary admin-only" data-bs-toggle="modal" data-bs-target="#modalConteudo">
+                    <i class="fas fa-plus me-2"></i>Novo Conteúdo
+                </button>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="pesquisar-conteudo" placeholder="Pesquisar conteúdo...">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <select class="form-select" id="filtro-ministerio">
+                                <option value="">Todos os Ministérios</option>
+                                <!-- Será preenchido via JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lista de Conteúdos -->
+            <div class="row" id="lista-conteudos">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo/Editar Conteúdo -->
+    <div class="modal fade" id="modalConteudo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalConteudoTitulo">Novo Conteúdo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-conteudo">
+                        <input type="hidden" id="conteudo-id">
+                        <div class="mb-3">
+                            <label for="conteudo-titulo" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="conteudo-titulo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="conteudo-ministerio" class="form-label">Ministério</label>
+                            <select class="form-select" id="conteudo-ministerio" required>
+                                <option value="">Selecione um ministério</option>
+                                <!-- Será preenchido via JavaScript -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="conteudo-link" class="form-label">Link do Arquivo</label>
+                            <input type="text" class="form-control" id="conteudo-link" required>
+                            <div class="form-text">Informe o link para o arquivo (Google Drive, Dropbox, etc.)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="conteudo-data" class="form-label">Data de Publicação</label>
+                            <input type="date" class="form-control" id="conteudo-data" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-conteudo">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <!-- Sidebar Loader -->
+    <script src="../js/sidebar-loader.js"></script>
+    
+    <script>
+        let ministerios = [];
+        let conteudos = [];
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            const usuario = verificarLogin();
+            
+            if (!usuario) return;
+            
+            try {
+                // Carregar dados
+                ministerios = await fetchAPI('ministerios');
+                conteudos = await fetchAPI('conteudos');
+                
+                // Preencher select de ministérios para filtro
+                const selectMinisterio = document.getElementById('filtro-ministerio');
+                ministerios.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.id;
+                    option.textContent = m.nome;
+                    selectMinisterio.appendChild(option);
+                });
+                
+                // Preencher select de ministérios para o formulário
+                const selectConteudoMinisterio = document.getElementById('conteudo-ministerio');
+                selectConteudoMinisterio.innerHTML = '<option value="">Selecione um ministério</option>';
+                ministerios.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.id;
+                    option.textContent = m.nome;
+                    selectConteudoMinisterio.appendChild(option);
+                });
+                
+                // Configurar eventos
+                document.getElementById('btn-salvar-conteudo').addEventListener('click', salvarConteudo);
+                document.getElementById('filtro-ministerio').addEventListener('change', filtrarConteudos);
+                document.getElementById('pesquisar-conteudo').addEventListener('input', filtrarConteudos);
+                
+                // Definir data atual no campo de data
+                document.getElementById('conteudo-data').valueAsDate = new Date();
+                
+                // Resetar formulário quando o modal for fechado
+                const modalConteudo = document.getElementById('modalConteudo');
+                modalConteudo.addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('form-conteudo').reset();
+                    document.getElementById('conteudo-id').value = '';
+                    document.getElementById('modalConteudoTitulo').textContent = 'Novo Conteúdo';
+                    document.getElementById('conteudo-data').valueAsDate = new Date();
+                });
+                
+                // Inicializar lista
+                atualizarListaConteudos();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            }
+        });
+        
+        // Função para atualizar a lista de conteúdos
+        function atualizarListaConteudos(conteudosFiltrados = null) {
+            const listaConteudos = document.getElementById('lista-conteudos');
+            listaConteudos.innerHTML = '';
+            
+            const listaParaExibir = conteudosFiltrados || conteudos;
+            
+            if (listaParaExibir.length === 0) {
+                listaConteudos.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            Nenhum conteúdo encontrado.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Ordenar conteúdos por data de publicação (mais recentes primeiro)
+            listaParaExibir.sort((a, b) => new Date(b.dataPublicacao) - new Date(a.dataPublicacao));
+            
+            listaParaExibir.forEach(conteudo => {
+                const ministerio = ministerios.find(m => m.id === conteudo.idMinisterio);
+                const col = document.createElement('div');
+                col.className = 'col-md-6 col-lg-4 mb-4';
+                
+                col.innerHTML = `
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-info text-white p-3 rounded me-3">
+                                    <i class="fas fa-file-alt fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0">${conteudo.titulo}</h5>
+                                    <p class="text-muted small mb-0">${ministerio ? ministerio.nome : 'Ministério não encontrado'}</p>
+                                </div>
+                            </div>
+                            <p class="card-text text-muted small">
+                                <i class="fas fa-calendar-alt me-1"></i> Publicado em ${formatarData(conteudo.dataPublicacao)}
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white border-0">
+                            <div class="d-flex justify-content-between">
+                                <a href="${conteudo.linkArquivo}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download me-1"></i> Baixar
+                                </a>
+                                <div class="btn-group admin-only">
+                                    <button type="button" class="btn btn-sm btn-outline-success editar-conteudo" data-id="${conteudo.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger excluir-conteudo" data-id="${conteudo.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                listaConteudos.appendChild(col);
+            });
+            
+            // Configurar eventos dos botões
+            document.querySelectorAll('.editar-conteudo').forEach(btn => {
+                btn.addEventListener('click', () => abrirModalEditarConteudo(parseInt(btn.dataset.id)));
+            });
+            
+            document.querySelectorAll('.excluir-conteudo').forEach(btn => {
+                btn.addEventListener('click', () => excluirConteudo(parseInt(btn.dataset.id)));
+            });
+        }
+        
+        // Função para filtrar conteúdos
+        function filtrarConteudos() {
+            const idMinisterio = document.getElementById('filtro-ministerio').value;
+            const pesquisa = document.getElementById('pesquisar-conteudo').value.toLowerCase();
+            
+            let conteudosFiltrados = [...conteudos];
+            
+            if (idMinisterio) {
+                conteudosFiltrados = conteudosFiltrados.filter(c => c.idMinisterio === parseInt(idMinisterio));
+            }
+            
+            if (pesquisa) {
+                conteudosFiltrados = conteudosFiltrados.filter(c => 
+                    c.titulo.toLowerCase().includes(pesquisa)
+                );
+            }
+            
+            atualizarListaConteudos(conteudosFiltrados);
+        }
+        
+        // Função para abrir o modal de edição de conteúdo
+        function abrirModalEditarConteudo(id) {
+            const conteudo = conteudos.find(c => c.id === id);
+            
+            if (!conteudo) return;
+            
+            document.getElementById('conteudo-id').value = conteudo.id;
+            document.getElementById('conteudo-titulo').value = conteudo.titulo;
+            document.getElementById('conteudo-ministerio').value = conteudo.idMinisterio;
+            document.getElementById('conteudo-link').value = conteudo.linkArquivo;
+            document.getElementById('conteudo-data').value = conteudo.dataPublicacao;
+            
+            document.getElementById('modalConteudoTitulo').textContent = 'Editar Conteúdo';
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalConteudo'));
+            modal.show();
+        }
+        
+        // Função para salvar conteúdo (novo ou edição)
+        async function salvarConteudo() {
+            const id = document.getElementById('conteudo-id').value;
+            const titulo = document.getElementById('conteudo-titulo').value;
+            const idMinisterio = document.getElementById('conteudo-ministerio').value;
+            const linkArquivo = document.getElementById('conteudo-link').value;
+            const dataPublicacao = document.getElementById('conteudo-data').value;
+            
+            if (!titulo || !idMinisterio || !linkArquivo || !dataPublicacao) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            try {
+                const conteudo = {
+                    titulo,
+                    idMinisterio: parseInt(idMinisterio),
+                    linkArquivo,
+                    dataPublicacao
+                };
+                
+                let response;
+                
+                if (id) {
+                    // Editar conteúdo existente
+                    conteudo.id = parseInt(id);
+                    response = await fetchAPI(`conteudos/${id}`, 'PUT', conteudo);
+                    
+                    // Atualizar na lista local
+                    const index = conteudos.findIndex(c => c.id === parseInt(id));
+                    if (index !== -1) {
+                        conteudos[index] = response;
+                    }
+                } else {
+                    // Criar novo conteúdo
+                    response = await fetchAPI('conteudos', 'POST', conteudo);
+                    conteudos.push(response);
+                }
+                
+                // Fechar modal e atualizar lista
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalConteudo'));
+                modal.hide();
+                
+                atualizarListaConteudos();
+            } catch (error) {
+                console.error('Erro ao salvar conteúdo:', error);
+                alert('Ocorreu um erro ao salvar o conteúdo. Por favor, tente novamente.');
+            }
+        }
+        
+        // Função para excluir conteúdo
+        async function excluirConteudo(id) {
+            if (!confirm('Tem certeza que deseja excluir este conteúdo? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+            
+            try {
+                await fetchAPI(`conteudos/${id}`, 'DELETE');
+                
+                // Remover da lista local
+                conteudos = conteudos.filter(c => c.id !== id);
+                
+                atualizarListaConteudos();
+            } catch (error) {
+                console.error('Erro ao excluir conteúdo:', error);
+                alert('Ocorreu um erro ao excluir o conteúdo. Por favor, tente novamente.');
+            }
+        }
+    </script>
+</body>
+</html>
