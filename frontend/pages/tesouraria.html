@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesouraria - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <span class="navbar-logo"></span>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+
+            <!-- Bloco de acesso negado (exibido se o backend recusar por falta da flag) -->
+            <div id="tesouraria-acesso-negado" class="alert alert-danger" style="display:none">
+                <i class="fas fa-lock me-2"></i>
+                Você não tem acesso ao módulo de Tesouraria. Esse acesso só pode ser concedido por um administrador do banco de dados.
+            </div>
+
+            <div id="tesouraria-conteudo" style="display:none">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <h1 class="mb-0"><i class="fas fa-hand-holding-dollar me-2"></i>Tesouraria</h1>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCategorias">
+                            <i class="fas fa-tags me-2"></i>Categorias
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalLancamento">
+                            <i class="fas fa-plus me-2"></i>Novo Lançamento
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Abas -->
+                <ul class="nav nav-tabs mb-4" id="tesourariaTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab-btn-lancamentos" data-bs-toggle="tab" data-bs-target="#tab-lancamentos" type="button" role="tab">
+                            <i class="fas fa-list me-1"></i>Lançamentos
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-btn-investimentos" data-bs-toggle="tab" data-bs-target="#tab-investimentos" type="button" role="tab">
+                            <i class="fas fa-chart-line me-1"></i>Investimentos
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-btn-relatorio" data-bs-toggle="tab" data-bs-target="#tab-relatorio" type="button" role="tab">
+                            <i class="fas fa-file-export me-1"></i>Relatório
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="tesourariaTabsContent">
+                <div class="tab-pane fade show active" id="tab-lancamentos" role="tabpanel">
+
+                <!-- Navegador de mês -->
+                <div class="d-flex align-items-center justify-content-center mb-4">
+                    <button class="btn btn-outline-secondary btn-sm" id="btn-mes-anterior"><i class="fas fa-chevron-left"></i></button>
+                    <h5 class="mx-3 mb-0" id="label-mes-atual">—</h5>
+                    <button class="btn btn-outline-secondary btn-sm" id="btn-mes-proximo"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <!-- Cartões de Resumo -->
+                <div class="row">
+                    <div class="col-md-3 mb-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-success text-white p-3 rounded me-3">
+                                        <i class="fas fa-arrow-down fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted mb-1">Entradas do Mês</h6>
+                                        <h4 class="mb-0" id="kpi-entradas-mes">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-danger text-white p-3 rounded me-3">
+                                        <i class="fas fa-arrow-up fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted mb-1">Saídas do Mês</h6>
+                                        <h4 class="mb-0" id="kpi-saidas-mes">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-info text-white p-3 rounded me-3">
+                                        <i class="fas fa-scale-balanced fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted mb-1">Saldo do Mês</h6>
+                                        <h4 class="mb-0" id="kpi-saldo-mes">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary text-white p-3 rounded me-3">
+                                        <i class="fas fa-vault fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-muted mb-1">Saldo Total</h6>
+                                        <h4 class="mb-0" id="kpi-saldo-total">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <select class="form-select" id="filtro-tipo">
+                                    <option value="">Todos os Tipos</option>
+                                    <option value="entrada">Entradas</option>
+                                    <option value="saida">Saídas</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="filtro-categoria">
+                                    <option value="">Todas as Categorias</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control" id="pesquisar-lancamento" placeholder="Pesquisar por descrição...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Lançamentos -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Tipo</th>
+                                        <th>Categoria</th>
+                                        <th>Descrição</th>
+                                        <th>Forma</th>
+                                        <th class="text-end">Valor</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-lancamentos">
+                                    <!-- Preenchido via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+                <!-- /tab-lancamentos -->
+
+                <div class="tab-pane fade" id="tab-investimentos" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div class="row g-3 flex-grow-1">
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-1">Total Aportado</h6>
+                                        <h4 class="mb-0 text-danger" id="kpi-invest-aportado">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-1">Total Resgatado</h6>
+                                        <h4 class="mb-0 text-success" id="kpi-invest-resgatado">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-1">Total em Rendimentos</h6>
+                                        <h4 class="mb-0 text-warning" id="kpi-invest-rendimentos">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-1">Saldo Investido</h6>
+                                        <h4 class="mb-0 text-primary" id="kpi-invest-saldo">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalInvestimento">
+                            <i class="fas fa-plus me-2"></i>Novo Investimento
+                        </button>
+                    </div>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Tipo</th>
+                                            <th>Instituição</th>
+                                            <th class="text-end">Aportado</th>
+                                            <th class="text-end">Resgatado</th>
+                                            <th class="text-end">Rendimentos</th>
+                                            <th class="text-end">Saldo Atual</th>
+                                            <th class="text-end">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-investimentos">
+                                        <!-- Preenchido via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /tab-investimentos -->
+
+                <div class="tab-pane fade" id="tab-relatorio" role="tabpanel">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label">De</label>
+                                    <input type="date" class="form-control" id="relatorio-data-inicio">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Até</label>
+                                    <input type="date" class="form-control" id="relatorio-data-fim">
+                                </div>
+                                <div class="col-md-4 d-grid">
+                                    <button class="btn btn-primary" id="btn-gerar-relatorio">
+                                        <i class="fas fa-magnifying-glass-chart me-2"></i>Gerar Relatório
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="relatorio-resultado" style="display:none">
+                        <div class="d-flex justify-content-end gap-2 mb-3">
+                            <button class="btn btn-outline-success" id="btn-exportar-csv">
+                                <i class="fas fa-file-csv me-2"></i>Exportar CSV
+                            </button>
+                            <button class="btn btn-danger" id="btn-exportar-pdf">
+                                <i class="fas fa-file-pdf me-2"></i>Gerar PDF
+                            </button>
+                        </div>
+                        <div class="row row-cols-2 row-cols-md-5 g-3 mb-1">
+                            <div class="col mb-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-1">Total Entradas</h6>
+                                        <h4 class="mb-0 text-success" id="kpi-rel-entradas">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col mb-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-1">Total Saídas</h6>
+                                        <h4 class="mb-0 text-danger" id="kpi-rel-saidas">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col mb-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-1">Saldo do Período</h6>
+                                        <h4 class="mb-0" id="kpi-rel-saldo">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col mb-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-1">Movimentado em Investimentos</h6>
+                                        <h4 class="mb-0 text-primary" id="kpi-rel-investimentos">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col mb-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-1">Saldo Total Acumulado</h6>
+                                        <h4 class="mb-0 text-dark" id="kpi-rel-saldo-total">R$ 0,00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-4">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">Entradas x Saídas por Mês</h6>
+                                        <canvas id="grafico-mensal" height="90"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">Despesas por Categoria</h6>
+                                        <canvas id="grafico-despesas-categoria" height="220"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">Receitas por Categoria</h6>
+                                        <canvas id="grafico-receitas-categoria" height="220"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-4" id="bloco-grafico-investimentos" style="display:none">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3">Saldo Atual por Investimento</h6>
+                                        <canvas id="grafico-investimentos" height="90"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Tipo</th>
+                                                <th>Categoria</th>
+                                                <th>Descrição</th>
+                                                <th>Forma</th>
+                                                <th class="text-end">Valor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabela-relatorio">
+                                            <!-- Preenchido via JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /tab-relatorio -->
+
+                </div>
+                <!-- /tab-content -->
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Investimento -->
+    <div class="modal fade" id="modalInvestimento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalInvestimentoTitulo">Novo Investimento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-investimento">
+                        <input type="hidden" id="investimento-id">
+                        <div class="mb-3">
+                            <label for="investimento-nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="investimento-nome" placeholder="Ex: Poupança Caixa, CDB Banco X" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="investimento-tipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="investimento-tipo">
+                                <option value="poupanca">Poupança</option>
+                                <option value="cdb">CDB</option>
+                                <option value="fundo">Fundo de Investimento</option>
+                                <option value="tesouro_direto">Tesouro Direto</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="investimento-instituicao" class="form-label">Instituição</label>
+                            <input type="text" class="form-control" id="investimento-instituicao" placeholder="Ex: Caixa Econômica, Banco do Brasil">
+                        </div>
+                        <div class="mb-3">
+                            <label for="investimento-observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="investimento-observacoes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-investimento">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Aportar/Resgatar -->
+    <div class="modal fade" id="modalMovimentoInvestimento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalMovimentoTitulo">Aportar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-movimento-investimento">
+                        <input type="hidden" id="movimento-investimento-id">
+                        <input type="hidden" id="movimento-tipo">
+                        <p class="mb-3">
+                            <span id="movimento-descricao-ajuda" class="text-muted"></span>
+                        </p>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="movimento-valor" class="form-label">Valor (R$)</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control" id="movimento-valor" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="movimento-data" class="form-label">Data</label>
+                                <input type="date" class="form-control" id="movimento-data" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="movimento-observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="movimento-observacoes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-confirmar-movimento">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Histórico do Investimento -->
+    <div class="modal fade" id="modalHistoricoInvestimento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Histórico: <span id="historico-investimento-nome"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Movimento</th>
+                                    <th>Observações</th>
+                                    <th class="text-end">Valor</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-historico-investimento">
+                                <!-- Preenchido via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo/Editar Lançamento -->
+    <div class="modal fade" id="modalLancamento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLancamentoTitulo">Novo Lançamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-lancamento">
+                        <input type="hidden" id="lancamento-id">
+                        <div class="mb-3">
+                            <label class="form-label d-block">Tipo</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="lancamento-tipo" id="tipo-entrada" value="entrada" checked>
+                                <label class="btn btn-outline-success" for="tipo-entrada"><i class="fas fa-arrow-down me-1"></i>Entrada</label>
+
+                                <input type="radio" class="btn-check" name="lancamento-tipo" id="tipo-saida" value="saida">
+                                <label class="btn btn-outline-danger" for="tipo-saida"><i class="fas fa-arrow-up me-1"></i>Saída</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lancamento-categoria" class="form-label">Categoria</label>
+                            <select class="form-select" id="lancamento-categoria">
+                                <option value="">Sem categoria</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lancamento-descricao" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="lancamento-descricao" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="lancamento-valor" class="form-label">Valor (R$)</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control" id="lancamento-valor" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lancamento-data" class="form-label">Data</label>
+                                <input type="date" class="form-control" id="lancamento-data" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lancamento-forma" class="form-label">Forma de Pagamento</label>
+                            <select class="form-select" id="lancamento-forma">
+                                <option value="">Não informado</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="pix">Pix</option>
+                                <option value="cartao">Cartão</option>
+                                <option value="transferencia">Transferência</option>
+                                <option value="boleto">Boleto</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lancamento-observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="lancamento-observacoes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-salvar-lancamento">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Categorias -->
+    <div class="modal fade" id="modalCategorias" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Categorias Financeiras</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-categoria" class="row g-2 mb-3">
+                        <div class="col-5">
+                            <input type="text" class="form-control" id="categoria-nome" placeholder="Nome da categoria" required>
+                        </div>
+                        <div class="col-4">
+                            <select class="form-select" id="categoria-tipo">
+                                <option value="entrada">Entrada</option>
+                                <option value="saida">Saída</option>
+                            </select>
+                        </div>
+                        <div class="col-3 d-grid">
+                            <button type="button" class="btn btn-primary" id="btn-adicionar-categoria">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <hr>
+                    <div id="lista-categorias">
+                        <!-- Preenchido via JavaScript -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js (gráficos do Relatório) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <!-- jsPDF + autotable (exportação de Relatório em PDF) -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3/dist/jspdf.plugin.autotable.min.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <!-- Sidebar Loader -->
+    <script src="../js/sidebar-loader.js"></script>
+
+    <script>
+        let categorias = [];
+        let lancamentos = [];
+        let investimentos = [];
+        let relatorioLinhas = [];
+        let mesAtual = new Date().getMonth() + 1;
+        let anoAtual = new Date().getFullYear();
+        const NOMES_MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const NOMES_TIPO_INVESTIMENTO = { poupanca: 'Poupança', cdb: 'CDB', fundo: 'Fundo de Investimento', tesouro_direto: 'Tesouro Direto', outro: 'Outro' };
+
+        function formatarMoeda(valor) {
+            return (Number(valor) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const usuario = verificarLogin();
+            if (!usuario) return;
+
+            document.getElementById('btn-mes-anterior').addEventListener('click', () => mudarMes(-1));
+            document.getElementById('btn-mes-proximo').addEventListener('click', () => mudarMes(1));
+            document.getElementById('btn-salvar-lancamento').addEventListener('click', salvarLancamento);
+            document.getElementById('btn-adicionar-categoria').addEventListener('click', adicionarCategoria);
+            document.getElementById('filtro-tipo').addEventListener('change', () => { atualizarSelectCategoriaFiltro(); renderizarLancamentos(); });
+            document.getElementById('filtro-categoria').addEventListener('change', renderizarLancamentos);
+            document.getElementById('pesquisar-lancamento').addEventListener('input', renderizarLancamentos);
+
+            document.querySelectorAll('input[name="lancamento-tipo"]').forEach(r => {
+                r.addEventListener('change', () => atualizarSelectCategoriaFormulario());
+            });
+
+            const modalLancamento = document.getElementById('modalLancamento');
+            modalLancamento.addEventListener('hidden.bs.modal', resetarFormularioLancamento);
+
+            document.getElementById('btn-salvar-investimento').addEventListener('click', salvarInvestimento);
+            document.getElementById('modalInvestimento').addEventListener('hidden.bs.modal', resetarFormularioInvestimento);
+            document.getElementById('btn-confirmar-movimento').addEventListener('click', confirmarMovimentoInvestimento);
+            document.getElementById('modalMovimentoInvestimento').addEventListener('hidden.bs.modal', () => {
+                document.getElementById('form-movimento-investimento').reset();
+            });
+
+            document.getElementById('btn-gerar-relatorio').addEventListener('click', gerarRelatorio);
+            document.getElementById('btn-exportar-csv').addEventListener('click', exportarRelatorioCSV);
+            document.getElementById('btn-exportar-pdf').addEventListener('click', gerarRelatorioPDF);
+            const hojeISO = new Date().toISOString().split('T')[0];
+            document.getElementById('relatorio-data-inicio').value = `${anoAtual}-${String(mesAtual).padStart(2, '0')}-01`;
+            document.getElementById('relatorio-data-fim').value = hojeISO;
+
+            await carregarTudo();
+        });
+
+        async function carregarTudo() {
+            try {
+                [categorias, investimentos] = await Promise.all([
+                    fetchAPI('tesouraria/categorias'),
+                    fetchAPI('tesouraria/investimentos')
+                ]);
+                document.getElementById('tesouraria-acesso-negado').style.display = 'none';
+                document.getElementById('tesouraria-conteudo').style.display = 'block';
+
+                atualizarSelectCategoriaFiltro();
+                atualizarSelectCategoriaFormulario();
+                document.getElementById('lancamento-data').valueAsDate = new Date();
+
+                renderizarInvestimentos();
+                await carregarMes();
+            } catch (error) {
+                console.error('Erro ao carregar tesouraria:', error);
+                document.getElementById('tesouraria-conteudo').style.display = 'none';
+                document.getElementById('tesouraria-acesso-negado').style.display = 'block';
+            }
+        }
+
+        async function carregarMes() {
+            document.getElementById('label-mes-atual').textContent = `${NOMES_MESES[mesAtual - 1]} de ${anoAtual}`;
+            try {
+                const [resumo, lista] = await Promise.all([
+                    fetchAPI(`tesouraria/resumo?mes=${mesAtual}&ano=${anoAtual}`),
+                    fetchAPI(`tesouraria?mes=${mesAtual}&ano=${anoAtual}`)
+                ]);
+
+                document.getElementById('kpi-entradas-mes').textContent = formatarMoeda(resumo.entradasMes);
+                document.getElementById('kpi-saidas-mes').textContent = formatarMoeda(resumo.saidasMes);
+                document.getElementById('kpi-saldo-mes').textContent = formatarMoeda(resumo.saldoMes);
+                document.getElementById('kpi-saldo-total').textContent = formatarMoeda(resumo.saldoTotal);
+
+                lancamentos = lista;
+                renderizarLancamentos();
+            } catch (error) {
+                console.error('Erro ao carregar dados do mês:', error);
+            }
+        }
+
+        function mudarMes(delta) {
+            mesAtual += delta;
+            if (mesAtual > 12) { mesAtual = 1; anoAtual++; }
+            if (mesAtual < 1) { mesAtual = 12; anoAtual--; }
+            carregarMes();
+        }
+
+        function atualizarSelectCategoriaFiltro() {
+            const tipo = document.getElementById('filtro-tipo').value;
+            const select = document.getElementById('filtro-categoria');
+            const atual = select.value;
+            select.innerHTML = '<option value="">Todas as Categorias</option>';
+            categorias.filter(c => !tipo || c.tipo === tipo).forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.nome;
+                select.appendChild(opt);
+            });
+            select.value = atual;
+        }
+
+        function atualizarSelectCategoriaFormulario() {
+            const tipo = document.querySelector('input[name="lancamento-tipo"]:checked').value;
+            const select = document.getElementById('lancamento-categoria');
+            select.innerHTML = '<option value="">Sem categoria</option>';
+            categorias.filter(c => c.tipo === tipo).forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.nome;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderizarLancamentos() {
+            const tipo = document.getElementById('filtro-tipo').value;
+            const idCategoria = document.getElementById('filtro-categoria').value;
+            const pesquisa = document.getElementById('pesquisar-lancamento').value.toLowerCase();
+
+            let filtrados = [...lancamentos];
+            if (tipo) filtrados = filtrados.filter(l => l.tipo === tipo);
+            if (idCategoria) filtrados = filtrados.filter(l => String(l.idCategoria) === String(idCategoria));
+            if (pesquisa) filtrados = filtrados.filter(l => l.descricao.toLowerCase().includes(pesquisa));
+
+            const tbody = document.getElementById('tabela-lancamentos');
+            tbody.innerHTML = '';
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Nenhum lançamento encontrado neste mês.</td></tr>';
+                return;
+            }
+
+            const NOMES_FORMA = { dinheiro: 'Dinheiro', pix: 'Pix', cartao: 'Cartão', transferencia: 'Transferência', boleto: 'Boleto', outro: 'Outro' };
+
+            filtrados.forEach(l => {
+                const tr = document.createElement('tr');
+                const badgeClasse = l.tipo === 'entrada' ? 'bg-success' : 'bg-danger';
+                const badgeTexto = l.tipo === 'entrada' ? 'Entrada' : 'Saída';
+                const sinal = l.tipo === 'entrada' ? '+' : '-';
+                const corValor = l.tipo === 'entrada' ? 'text-success' : 'text-danger';
+
+                tr.innerHTML = `
+                    <td>${formatarData(l.data)}</td>
+                    <td><span class="badge ${badgeClasse}">${badgeTexto}</span></td>
+                    <td>${l.categoriaNome ? escapeHtml(l.categoriaNome) : '<span class="text-muted">Sem categoria</span>'}</td>
+                    <td>${escapeHtml(l.descricao)}</td>
+                    <td>${NOMES_FORMA[l.formaPagamento] || '—'}</td>
+                    <td class="text-end fw-semibold ${corValor}">${sinal} ${formatarMoeda(l.valor)}</td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-success btn-editar-lancamento" data-id="${l.id}"><i class="fas fa-edit"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-excluir-lancamento" data-id="${l.id}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll('.btn-editar-lancamento').forEach(btn => {
+                btn.addEventListener('click', () => abrirModalEditarLancamento(btn.dataset.id));
+            });
+            document.querySelectorAll('.btn-excluir-lancamento').forEach(btn => {
+                btn.addEventListener('click', () => excluirLancamento(btn.dataset.id));
+            });
+        }
+
+        function resetarFormularioLancamento() {
+            document.getElementById('form-lancamento').reset();
+            document.getElementById('lancamento-id').value = '';
+            document.getElementById('modalLancamentoTitulo').textContent = 'Novo Lançamento';
+            document.getElementById('tipo-entrada').checked = true;
+            document.getElementById('lancamento-data').valueAsDate = new Date();
+            atualizarSelectCategoriaFormulario();
+        }
+
+        function abrirModalEditarLancamento(id) {
+            const l = lancamentos.find(x => String(x.id) === String(id));
+            if (!l) return;
+
+            document.getElementById('lancamento-id').value = l.id;
+            document.getElementById(l.tipo === 'entrada' ? 'tipo-entrada' : 'tipo-saida').checked = true;
+            atualizarSelectCategoriaFormulario();
+            document.getElementById('lancamento-categoria').value = l.idCategoria || '';
+            document.getElementById('lancamento-descricao').value = l.descricao;
+            document.getElementById('lancamento-valor').value = l.valor;
+            document.getElementById('lancamento-data').value = l.data;
+            document.getElementById('lancamento-forma').value = l.formaPagamento || '';
+            document.getElementById('lancamento-observacoes').value = l.observacoes || '';
+            document.getElementById('modalLancamentoTitulo').textContent = 'Editar Lançamento';
+
+            new bootstrap.Modal(document.getElementById('modalLancamento')).show();
+        }
+
+        async function salvarLancamento() {
+            const form = document.getElementById('form-lancamento');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+
+            const id = document.getElementById('lancamento-id').value;
+            const payload = {
+                tipo: document.querySelector('input[name="lancamento-tipo"]:checked').value,
+                idCategoria: document.getElementById('lancamento-categoria').value || null,
+                descricao: document.getElementById('lancamento-descricao').value,
+                valor: parseFloat(document.getElementById('lancamento-valor').value),
+                data: document.getElementById('lancamento-data').value,
+                formaPagamento: document.getElementById('lancamento-forma').value || null,
+                observacoes: document.getElementById('lancamento-observacoes').value || null
+            };
+
+            try {
+                if (id) {
+                    await fetchAPI(`tesouraria/${id}`, 'PUT', payload);
+                } else {
+                    await fetchAPI('tesouraria', 'POST', payload);
+                }
+                bootstrap.Modal.getInstance(document.getElementById('modalLancamento')).hide();
+                await carregarMes();
+            } catch (error) {
+                console.error('Erro ao salvar lançamento:', error);
+                alert('Ocorreu um erro ao salvar o lançamento. Por favor, tente novamente.');
+            }
+        }
+
+        async function excluirLancamento(id) {
+            if (!confirm('Tem certeza que deseja excluir este lançamento? Esta ação não pode ser desfeita.')) return;
+            try {
+                await fetchAPI(`tesouraria/${id}`, 'DELETE');
+                await carregarMes();
+            } catch (error) {
+                console.error('Erro ao excluir lançamento:', error);
+                alert('Ocorreu um erro ao excluir o lançamento. Por favor, tente novamente.');
+            }
+        }
+
+        function renderizarListaCategorias() {
+            const container = document.getElementById('lista-categorias');
+            container.innerHTML = '';
+
+            ['entrada', 'saida'].forEach(tipo => {
+                const grupo = categorias.filter(c => c.tipo === tipo);
+                if (grupo.length === 0) return;
+
+                const titulo = document.createElement('h6');
+                titulo.className = 'text-muted mt-2';
+                titulo.textContent = tipo === 'entrada' ? 'Entradas' : 'Saídas';
+                container.appendChild(titulo);
+
+                grupo.forEach(c => {
+                    const item = document.createElement('div');
+                    item.className = 'd-flex justify-content-between align-items-center py-1 border-bottom';
+                    const corSegura = /^#[0-9a-fA-F]{3,8}$/.test(c.cor) ? c.cor : '#1b5e3f';
+                    item.innerHTML = `
+                        <span><span class="badge me-2" style="background-color:${corSegura}">&nbsp;</span>${escapeHtml(c.nome)}</span>
+                        <button class="btn btn-sm btn-outline-danger btn-excluir-categoria" data-id="${c.id}"><i class="fas fa-trash"></i></button>
+                    `;
+                    container.appendChild(item);
+                });
+            });
+
+            document.querySelectorAll('.btn-excluir-categoria').forEach(btn => {
+                btn.addEventListener('click', () => excluirCategoria(btn.dataset.id));
+            });
+        }
+
+        async function adicionarCategoria() {
+            const nome = document.getElementById('categoria-nome').value.trim();
+            const tipo = document.getElementById('categoria-tipo').value;
+            if (!nome) return;
+
+            try {
+                const nova = await fetchAPI('tesouraria/categorias', 'POST', { nome, tipo });
+                categorias.push(nova);
+                document.getElementById('categoria-nome').value = '';
+                renderizarListaCategorias();
+                atualizarSelectCategoriaFiltro();
+                atualizarSelectCategoriaFormulario();
+            } catch (error) {
+                console.error('Erro ao criar categoria:', error);
+                alert('Ocorreu um erro ao criar a categoria.');
+            }
+        }
+
+        async function excluirCategoria(id) {
+            if (!confirm('Excluir esta categoria? Lançamentos existentes ficarão sem categoria.')) return;
+            try {
+                await fetchAPI(`tesouraria/categorias/${id}`, 'DELETE');
+                categorias = categorias.filter(c => String(c.id) !== String(id));
+                renderizarListaCategorias();
+                atualizarSelectCategoriaFiltro();
+                atualizarSelectCategoriaFormulario();
+                await carregarMes();
+            } catch (error) {
+                console.error('Erro ao excluir categoria:', error);
+                alert('Ocorreu um erro ao excluir a categoria.');
+            }
+        }
+
+        document.getElementById('modalCategorias').addEventListener('show.bs.modal', renderizarListaCategorias);
+
+        // ══════════════════════════════════════════
+        // Investimentos
+        // ══════════════════════════════════════════
+
+        function renderizarInvestimentos() {
+            const totalAportado = investimentos.reduce((acc, i) => acc + i.totalAportado, 0);
+            const totalResgatado = investimentos.reduce((acc, i) => acc + i.totalResgatado, 0);
+            const totalRendimentos = investimentos.reduce((acc, i) => acc + i.totalRendimentos, 0);
+            document.getElementById('kpi-invest-aportado').textContent = formatarMoeda(totalAportado);
+            document.getElementById('kpi-invest-resgatado').textContent = formatarMoeda(totalResgatado);
+            document.getElementById('kpi-invest-rendimentos').textContent = formatarMoeda(totalRendimentos);
+            document.getElementById('kpi-invest-saldo').textContent = formatarMoeda(totalAportado - totalResgatado + totalRendimentos);
+
+            const tbody = document.getElementById('tabela-investimentos');
+            tbody.innerHTML = '';
+
+            if (investimentos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Nenhum investimento cadastrado.</td></tr>';
+                return;
+            }
+
+            investimentos.forEach(inv => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${escapeHtml(inv.nome)}</td>
+                    <td>${NOMES_TIPO_INVESTIMENTO[inv.tipo] || 'Outro'}</td>
+                    <td>${inv.instituicao ? escapeHtml(inv.instituicao) : '<span class="text-muted">—</span>'}</td>
+                    <td class="text-end text-danger">${formatarMoeda(inv.totalAportado)}</td>
+                    <td class="text-end text-success">${formatarMoeda(inv.totalResgatado)}</td>
+                    <td class="text-end text-warning">${formatarMoeda(inv.totalRendimentos)}</td>
+                    <td class="text-end fw-semibold">${formatarMoeda(inv.saldoAtual)}</td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-aportar" data-id="${inv.id}" title="Aportar"><i class="fas fa-arrow-up"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-success btn-resgatar" data-id="${inv.id}" title="Resgatar"><i class="fas fa-arrow-down"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-warning btn-rendimento" data-id="${inv.id}" title="Registrar Rendimento"><i class="fas fa-seedling"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary btn-historico" data-id="${inv.id}" title="Histórico"><i class="fas fa-clock-rotate-left"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-editar-investimento" data-id="${inv.id}" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-dark btn-excluir-investimento" data-id="${inv.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll('.btn-aportar').forEach(btn => btn.addEventListener('click', () => abrirModalMovimento(btn.dataset.id, 'aporte')));
+            document.querySelectorAll('.btn-resgatar').forEach(btn => btn.addEventListener('click', () => abrirModalMovimento(btn.dataset.id, 'resgate')));
+            document.querySelectorAll('.btn-rendimento').forEach(btn => btn.addEventListener('click', () => abrirModalMovimento(btn.dataset.id, 'rendimento')));
+            document.querySelectorAll('.btn-historico').forEach(btn => btn.addEventListener('click', () => abrirHistoricoInvestimento(btn.dataset.id)));
+            document.querySelectorAll('.btn-editar-investimento').forEach(btn => btn.addEventListener('click', () => editarInvestimento(btn.dataset.id)));
+            document.querySelectorAll('.btn-excluir-investimento').forEach(btn => btn.addEventListener('click', () => excluirInvestimento(btn.dataset.id)));
+        }
+
+        function resetarFormularioInvestimento() {
+            document.getElementById('form-investimento').reset();
+            document.getElementById('investimento-id').value = '';
+            document.getElementById('modalInvestimentoTitulo').textContent = 'Novo Investimento';
+        }
+
+        function editarInvestimento(id) {
+            const inv = investimentos.find(i => String(i.id) === String(id));
+            if (!inv) return;
+
+            document.getElementById('investimento-id').value = inv.id;
+            document.getElementById('investimento-nome').value = inv.nome;
+            document.getElementById('investimento-tipo').value = inv.tipo;
+            document.getElementById('investimento-instituicao').value = inv.instituicao || '';
+            document.getElementById('investimento-observacoes').value = inv.observacoes || '';
+            document.getElementById('modalInvestimentoTitulo').textContent = 'Editar Investimento';
+
+            new bootstrap.Modal(document.getElementById('modalInvestimento')).show();
+        }
+
+        async function salvarInvestimento() {
+            const form = document.getElementById('form-investimento');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+
+            const id = document.getElementById('investimento-id').value;
+            const payload = {
+                nome: document.getElementById('investimento-nome').value,
+                tipo: document.getElementById('investimento-tipo').value,
+                instituicao: document.getElementById('investimento-instituicao').value || null,
+                observacoes: document.getElementById('investimento-observacoes').value || null
+            };
+
+            try {
+                if (id) {
+                    await fetchAPI(`tesouraria/investimentos/${id}`, 'PUT', payload);
+                } else {
+                    await fetchAPI('tesouraria/investimentos', 'POST', payload);
+                }
+                bootstrap.Modal.getInstance(document.getElementById('modalInvestimento')).hide();
+                investimentos = await fetchAPI('tesouraria/investimentos');
+                renderizarInvestimentos();
+            } catch (error) {
+                console.error('Erro ao salvar investimento:', error);
+                alert('Ocorreu um erro ao salvar o investimento. Por favor, tente novamente.');
+            }
+        }
+
+        async function excluirInvestimento(id) {
+            if (!confirm('Excluir este investimento?')) return;
+            try {
+                await fetchAPI(`tesouraria/investimentos/${id}`, 'DELETE');
+                investimentos = await fetchAPI('tesouraria/investimentos');
+                renderizarInvestimentos();
+            } catch (error) {
+                console.error('Erro ao excluir investimento:', error);
+                alert(error.message || 'Não foi possível excluir este investimento — verifique se ele já tem aportes ou resgates registrados.');
+            }
+        }
+
+        function abrirModalMovimento(id, tipo) {
+            const inv = investimentos.find(i => String(i.id) === String(id));
+            if (!inv) return;
+
+            document.getElementById('movimento-investimento-id').value = id;
+            document.getElementById('movimento-tipo').value = tipo;
+            document.getElementById('movimento-data').valueAsDate = new Date();
+
+            if (tipo === 'aporte') {
+                document.getElementById('modalMovimentoTitulo').textContent = `Aportar em: ${inv.nome}`;
+                document.getElementById('movimento-descricao-ajuda').textContent = 'O valor sai do saldo principal da tesouraria e é somado ao saldo deste investimento.';
+                document.getElementById('btn-confirmar-movimento').className = 'btn btn-danger';
+            } else if (tipo === 'resgate') {
+                document.getElementById('modalMovimentoTitulo').textContent = `Resgatar de: ${inv.nome}`;
+                document.getElementById('movimento-descricao-ajuda').textContent = 'O valor volta para o saldo principal da tesouraria e é subtraído do saldo deste investimento.';
+                document.getElementById('btn-confirmar-movimento').className = 'btn btn-success';
+            } else {
+                document.getElementById('modalMovimentoTitulo').textContent = `Registrar rendimento em: ${inv.nome}`;
+                document.getElementById('movimento-descricao-ajuda').textContent = 'Juros/valorização: soma no saldo deste investimento, mas não sai nem entra no saldo principal da tesouraria.';
+                document.getElementById('btn-confirmar-movimento').className = 'btn btn-warning';
+            }
+
+            new bootstrap.Modal(document.getElementById('modalMovimentoInvestimento')).show();
+        }
+
+        async function confirmarMovimentoInvestimento() {
+            const form = document.getElementById('form-movimento-investimento');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+
+            const id = document.getElementById('movimento-investimento-id').value;
+            const tipo = document.getElementById('movimento-tipo').value;
+            const payload = {
+                valor: parseFloat(document.getElementById('movimento-valor').value),
+                data: document.getElementById('movimento-data').value,
+                observacoes: document.getElementById('movimento-observacoes').value || null
+            };
+
+            const ENDPOINTS = { aporte: 'aportar', resgate: 'resgatar', rendimento: 'rendimento' };
+
+            try {
+                await fetchAPI(`tesouraria/investimentos/${id}/${ENDPOINTS[tipo]}`, 'POST', payload);
+                bootstrap.Modal.getInstance(document.getElementById('modalMovimentoInvestimento')).hide();
+                investimentos = await fetchAPI('tesouraria/investimentos');
+                renderizarInvestimentos();
+                if (tipo !== 'rendimento') await carregarMes(); // rendimento não mexe no saldo principal
+            } catch (error) {
+                console.error('Erro ao registrar movimento:', error);
+                alert('Ocorreu um erro ao registrar o movimento. Por favor, tente novamente.');
+            }
+        }
+
+        async function abrirHistoricoInvestimento(id) {
+            const inv = investimentos.find(i => String(i.id) === String(id));
+            if (!inv) return;
+
+            document.getElementById('historico-investimento-nome').textContent = inv.nome;
+            const tbody = document.getElementById('tabela-historico-investimento');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Carregando...</td></tr>';
+            new bootstrap.Modal(document.getElementById('modalHistoricoInvestimento')).show();
+
+            try {
+                const movimentos = await fetchAPI(`tesouraria/investimentos/${id}/movimentacoes`);
+                tbody.innerHTML = '';
+                if (movimentos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Nenhuma movimentação registrada.</td></tr>';
+                    return;
+                }
+                const BADGES = {
+                    aporte: { classe: 'bg-danger', texto: 'Aporte' },
+                    resgate: { classe: 'bg-success', texto: 'Resgate' },
+                    rendimento: { classe: 'bg-warning text-dark', texto: 'Rendimento' }
+                };
+                movimentos.forEach(m => {
+                    const tr = document.createElement('tr');
+                    const badge = BADGES[m.movimento] || BADGES.rendimento;
+                    const acao = m.origem === 'rendimento'
+                        ? `<button type="button" class="btn btn-sm btn-outline-dark btn-excluir-rendimento" data-id-investimento="${id}" data-id-rendimento="${m.id}"><i class="fas fa-trash"></i></button>`
+                        : '<span class="text-muted small">editar em Lançamentos</span>';
+                    tr.innerHTML = `
+                        <td>${formatarData(m.data)}</td>
+                        <td><span class="badge ${badge.classe}">${badge.texto}</span></td>
+                        <td>${m.observacoes ? escapeHtml(m.observacoes) : '<span class="text-muted">—</span>'}</td>
+                        <td class="text-end fw-semibold">${formatarMoeda(m.valor)}</td>
+                        <td class="text-end">${acao}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                document.querySelectorAll('.btn-excluir-rendimento').forEach(btn => {
+                    btn.addEventListener('click', () => excluirRendimento(btn.dataset.idInvestimento, btn.dataset.idRendimento));
+                });
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-3">Erro ao carregar histórico.</td></tr>';
+            }
+        }
+
+        async function excluirRendimento(idInvestimento, idRendimento) {
+            if (!confirm('Excluir este rendimento?')) return;
+            try {
+                await fetchAPI(`tesouraria/investimentos/${idInvestimento}/rendimento/${idRendimento}`, 'DELETE');
+                investimentos = await fetchAPI('tesouraria/investimentos');
+                renderizarInvestimentos();
+                await abrirHistoricoInvestimento(idInvestimento);
+            } catch (error) {
+                console.error('Erro ao excluir rendimento:', error);
+                alert('Ocorreu um erro ao excluir o rendimento.');
+            }
+        }
+
+        // ══════════════════════════════════════════
+        // Relatório
+        // ══════════════════════════════════════════
+
+        async function gerarRelatorio() {
+            const dataInicio = document.getElementById('relatorio-data-inicio').value;
+            const dataFim = document.getElementById('relatorio-data-fim').value;
+            if (!dataInicio || !dataFim) {
+                alert('Informe as duas datas do período.');
+                return;
+            }
+            if (dataInicio > dataFim) {
+                alert('A data inicial não pode ser depois da data final.');
+                return;
+            }
+
+            const btn = document.getElementById('btn-gerar-relatorio');
+            btn.disabled = true;
+            try {
+                const [linhas, resumoGeral] = await Promise.all([
+                    fetchAPI(`tesouraria?dataInicio=${dataInicio}&dataFim=${dataFim}`),
+                    fetchAPI('tesouraria/resumo')
+                ]);
+                relatorioLinhas = linhas;
+                window._relatorioSaldoTotal = resumoGeral.saldoTotal;
+
+                const NOMES_FORMA = { dinheiro: 'Dinheiro', pix: 'Pix', cartao: 'Cartão', transferencia: 'Transferência', boleto: 'Boleto', outro: 'Outro' };
+                const totalEntradas = relatorioLinhas.filter(l => l.tipo === 'entrada').reduce((acc, l) => acc + l.valor, 0);
+                const totalSaidas = relatorioLinhas.filter(l => l.tipo === 'saida').reduce((acc, l) => acc + l.valor, 0);
+                const totalInvestimentos = relatorioLinhas.filter(l => l.movimentoInvestimento).reduce((acc, l) => acc + l.valor, 0);
+
+                document.getElementById('kpi-rel-entradas').textContent = formatarMoeda(totalEntradas);
+                document.getElementById('kpi-rel-saidas').textContent = formatarMoeda(totalSaidas);
+                document.getElementById('kpi-rel-saldo').textContent = formatarMoeda(totalEntradas - totalSaidas);
+                document.getElementById('kpi-rel-investimentos').textContent = formatarMoeda(totalInvestimentos);
+                document.getElementById('kpi-rel-saldo-total').textContent = formatarMoeda(resumoGeral.saldoTotal);
+
+                const tbody = document.getElementById('tabela-relatorio');
+                tbody.innerHTML = '';
+                if (relatorioLinhas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Nenhum lançamento neste período.</td></tr>';
+                } else {
+                    relatorioLinhas.forEach(l => {
+                        const tr = document.createElement('tr');
+                        const badgeClasse = l.tipo === 'entrada' ? 'bg-success' : 'bg-danger';
+                        const badgeTexto = l.tipo === 'entrada' ? 'Entrada' : 'Saída';
+                        const sinal = l.tipo === 'entrada' ? '+' : '-';
+                        const corValor = l.tipo === 'entrada' ? 'text-success' : 'text-danger';
+                        tr.innerHTML = `
+                            <td>${formatarData(l.data)}</td>
+                            <td><span class="badge ${badgeClasse}">${badgeTexto}</span></td>
+                            <td>${l.categoriaNome ? escapeHtml(l.categoriaNome) : '<span class="text-muted">—</span>'}</td>
+                            <td>${escapeHtml(l.descricao)}</td>
+                            <td>${NOMES_FORMA[l.formaPagamento] || '—'}</td>
+                            <td class="text-end fw-semibold ${corValor}">${sinal} ${formatarMoeda(l.valor)}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+                renderizarGraficosRelatorio(relatorioLinhas);
+
+                document.getElementById('relatorio-resultado').style.display = 'block';
+                document.getElementById('btn-exportar-csv').disabled = relatorioLinhas.length === 0;
+                document.getElementById('btn-exportar-pdf').disabled = relatorioLinhas.length === 0;
+            } catch (error) {
+                console.error('Erro ao gerar relatório:', error);
+                alert('Ocorreu um erro ao gerar o relatório. Por favor, tente novamente.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // ══════════════════════════════════════════
+        // Gráficos do Relatório (Chart.js)
+        // ══════════════════════════════════════════
+
+        let graficoMensal, graficoDespesasCategoria, graficoReceitasCategoria, graficoInvestimentos;
+        const PALETA_CATEGORIAS = ['#1b5e3f', '#27ae60', '#2ecc71', '#16a085', '#c0392b', '#e74c3c', '#d35400', '#8e44ad', '#2980b9', '#6c757d', '#f39c12', '#0d3b2e'];
+
+        function agruparPorMes(linhas) {
+            const porMes = {};
+            linhas.forEach(l => {
+                const chave = l.data.slice(0, 7); // YYYY-MM
+                if (!porMes[chave]) porMes[chave] = { entradas: 0, saidas: 0 };
+                if (l.tipo === 'entrada') porMes[chave].entradas += l.valor;
+                else porMes[chave].saidas += l.valor;
+            });
+            const meses = Object.keys(porMes).sort();
+            return {
+                labels: meses.map(m => {
+                    const [ano, mes] = m.split('-');
+                    return `${NOMES_MESES[parseInt(mes) - 1].slice(0, 3)}/${ano.slice(2)}`;
+                }),
+                entradas: meses.map(m => porMes[m].entradas),
+                saidas: meses.map(m => porMes[m].saidas)
+            };
+        }
+
+        function agruparPorCategoria(linhas, tipo) {
+            const porCategoria = {};
+            linhas
+                .filter(l => l.tipo === tipo && !l.movimentoInvestimento)
+                .forEach(l => {
+                    const nome = l.categoriaNome || 'Sem categoria';
+                    if (!porCategoria[nome]) porCategoria[nome] = { valor: 0, cor: l.categoriaCor };
+                    porCategoria[nome].valor += l.valor;
+                });
+            const nomes = Object.keys(porCategoria);
+            return {
+                labels: nomes,
+                valores: nomes.map(n => porCategoria[n].valor),
+                cores: nomes.map((n, i) => (porCategoria[n].cor && /^#[0-9a-fA-F]{3,8}$/.test(porCategoria[n].cor)) ? porCategoria[n].cor : PALETA_CATEGORIAS[i % PALETA_CATEGORIAS.length])
+            };
+        }
+
+        function renderizarGraficosRelatorio(linhas) {
+            if (graficoMensal) graficoMensal.destroy();
+            if (graficoDespesasCategoria) graficoDespesasCategoria.destroy();
+            if (graficoReceitasCategoria) graficoReceitasCategoria.destroy();
+            if (graficoInvestimentos) graficoInvestimentos.destroy();
+
+            const mensal = agruparPorMes(linhas);
+            graficoMensal = new Chart(document.getElementById('grafico-mensal'), {
+                type: 'bar',
+                plugins: [ChartDataLabels],
+                data: {
+                    labels: mensal.labels,
+                    datasets: [
+                        { label: 'Entradas', data: mensal.entradas, backgroundColor: '#27ae60' },
+                        { label: 'Saídas', data: mensal.saidas, backgroundColor: '#c0392b' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: {
+                        datalabels: {
+                            anchor: 'end', align: 'top', color: '#212529', font: { size: 10, weight: 'bold' },
+                            formatter: valor => valor > 0 ? formatarMoeda(valor) : ''
+                        }
+                    }
+                }
+            });
+
+            const despesas = agruparPorCategoria(linhas, 'saida');
+            graficoDespesasCategoria = new Chart(document.getElementById('grafico-despesas-categoria'), {
+                type: 'doughnut',
+                plugins: [ChartDataLabels],
+                data: { labels: despesas.labels, datasets: [{ data: despesas.valores, backgroundColor: despesas.cores }] },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right' },
+                        datalabels: {
+                            color: '#ffffff', font: { size: 11, weight: 'bold' },
+                            formatter: (valor, ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                return total > 0 ? `${Math.round((valor / total) * 100)}%` : '';
+                            }
+                        }
+                    }
+                }
+            });
+
+            const receitas = agruparPorCategoria(linhas, 'entrada');
+            graficoReceitasCategoria = new Chart(document.getElementById('grafico-receitas-categoria'), {
+                type: 'doughnut',
+                plugins: [ChartDataLabels],
+                data: { labels: receitas.labels, datasets: [{ data: receitas.valores, backgroundColor: receitas.cores }] },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right' },
+                        datalabels: {
+                            color: '#ffffff', font: { size: 11, weight: 'bold' },
+                            formatter: (valor, ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                return total > 0 ? `${Math.round((valor / total) * 100)}%` : '';
+                            }
+                        }
+                    }
+                }
+            });
+
+            const blocoInvest = document.getElementById('bloco-grafico-investimentos');
+            if (investimentos.length > 0) {
+                blocoInvest.style.display = 'block';
+                graficoInvestimentos = new Chart(document.getElementById('grafico-investimentos'), {
+                    type: 'bar',
+                    plugins: [ChartDataLabels],
+                    data: {
+                        labels: investimentos.map(i => i.nome),
+                        datasets: [{ label: 'Saldo Atual (R$)', data: investimentos.map(i => i.saldoAtual), backgroundColor: '#1b5e3f' }]
+                    },
+                    options: {
+                        responsive: true,
+                        indexAxis: 'y',
+                        scales: { x: { beginAtZero: true } },
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                anchor: 'end', align: 'right', color: '#212529', font: { size: 10, weight: 'bold' },
+                                formatter: valor => formatarMoeda(valor)
+                            }
+                        }
+                    }
+                });
+            } else {
+                blocoInvest.style.display = 'none';
+            }
+        }
+
+        function exportarRelatorioCSV() {
+            if (relatorioLinhas.length === 0) return;
+
+            const NOMES_FORMA = { dinheiro: 'Dinheiro', pix: 'Pix', cartao: 'Cartão', transferencia: 'Transferência', boleto: 'Boleto', outro: 'Outro' };
+            const campoCSV = (valor) => `"${String(valor === undefined || valor === null ? '' : valor).replace(/"/g, '""')}"`;
+
+            const cabecalho = ['Data', 'Tipo', 'Categoria', 'Descrição', 'Forma de Pagamento', 'Valor (R$)', 'Investimento'];
+            const linhas = relatorioLinhas.map(l => [
+                l.data,
+                l.tipo === 'entrada' ? 'Entrada' : 'Saída',
+                l.categoriaNome || '',
+                l.descricao,
+                NOMES_FORMA[l.formaPagamento] || '',
+                l.valor.toFixed(2).replace('.', ','),
+                l.investimentoNome || ''
+            ]);
+
+            const csv = [cabecalho, ...linhas].map(linha => linha.map(campoCSV).join(';')).join('\r\n');
+            const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const dataInicio = document.getElementById('relatorio-data-inicio').value;
+            const dataFim = document.getElementById('relatorio-data-fim').value;
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `tesouraria_${dataInicio}_a_${dataFim}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // ══════════════════════════════════════════
+        // Exportação em PDF (jsPDF + autoTable), reaproveitando os
+        // gráficos já renderizados na tela.
+        // ══════════════════════════════════════════
+
+        function gerarRelatorioPDF() {
+            if (relatorioLinhas.length === 0) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const LARGURA = 210;
+            const MARGEM = 14;
+            const LARGURA_UTIL = LARGURA - MARGEM * 2;
+            const COR_PRIMARIA = '#1b5e3f';
+            let y = 0;
+
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            const nomeIgreja = (window.IGREJA_CONFIG && window.IGREJA_CONFIG.NOME_IGREJA) || 'Sistema de Gestão de Igreja';
+            const dataInicio = document.getElementById('relatorio-data-inicio').value;
+            const dataFim = document.getElementById('relatorio-data-fim').value;
+            const geradoEm = new Date().toLocaleString('pt-BR');
+
+            function ensureSpace(alturaNecessaria) {
+                if (y + alturaNecessaria > 282) {
+                    doc.addPage();
+                    y = 15;
+                }
+            }
+
+            function adicionarImagemCanvas(canvasId, largura) {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas || !canvas.width) return;
+                const razao = canvas.height / canvas.width;
+                const altura = largura * razao;
+                ensureSpace(altura + 12);
+                const imgData = canvas.toDataURL('image/png', 1.0);
+                doc.addImage(imgData, 'PNG', MARGEM + (LARGURA_UTIL - largura) / 2, y, largura, altura);
+                y += altura + 10;
+            }
+
+            // ── Cabeçalho ──
+            doc.setFillColor(COR_PRIMARIA);
+            doc.rect(0, 0, LARGURA, 26, 'F');
+            doc.setTextColor('#ffffff');
+            doc.setFontSize(17);
+            doc.setFont(undefined, 'bold');
+            doc.text('Relatório Financeiro — Tesouraria', MARGEM, 12);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            doc.text(nomeIgreja, MARGEM, 19);
+
+            doc.setTextColor('#212529');
+            y = 33;
+            doc.setFontSize(10);
+            doc.text(`Período: ${formatarData(dataInicio)} a ${formatarData(dataFim)}`, MARGEM, y);
+            doc.text(`Gerado em: ${geradoEm}${usuario.nome ? ' — por ' + usuario.nome : ''}`, LARGURA - MARGEM, y, { align: 'right' });
+            y += 6;
+            if (window._relatorioSaldoTotal !== undefined) {
+                doc.setFont(undefined, 'bold');
+                doc.text(`Saldo Total Acumulado (todas as datas): ${formatarMoeda(window._relatorioSaldoTotal)}`, MARGEM, y);
+                doc.setFont(undefined, 'normal');
+                y += 6;
+            }
+            y += 2;
+
+            // ── KPIs ──
+            const totalEntradas = relatorioLinhas.filter(l => l.tipo === 'entrada').reduce((a, l) => a + l.valor, 0);
+            const totalSaidas = relatorioLinhas.filter(l => l.tipo === 'saida').reduce((a, l) => a + l.valor, 0);
+            const totalInvest = relatorioLinhas.filter(l => l.movimentoInvestimento).reduce((a, l) => a + l.valor, 0);
+
+            doc.autoTable({
+                startY: y,
+                margin: { left: MARGEM, right: MARGEM },
+                theme: 'grid',
+                head: [['Total Entradas', 'Total Saídas', 'Saldo do Período', 'Movimentado em Investimentos']],
+                body: [[formatarMoeda(totalEntradas), formatarMoeda(totalSaidas), formatarMoeda(totalEntradas - totalSaidas), formatarMoeda(totalInvest)]],
+                headStyles: { fillColor: COR_PRIMARIA, halign: 'center' },
+                bodyStyles: { halign: 'center', fontStyle: 'bold' }
+            });
+            y = doc.lastAutoTable.finalY + 10;
+
+            // ── Gráficos ──
+            adicionarImagemCanvas('grafico-mensal', LARGURA_UTIL);
+
+            ensureSpace(10);
+            const larguraMetade = (LARGURA_UTIL - 6) / 2;
+            const canvasDespesas = document.getElementById('grafico-despesas-categoria');
+            const canvasReceitas = document.getElementById('grafico-receitas-categoria');
+            if (canvasDespesas && canvasDespesas.width && canvasReceitas && canvasReceitas.width) {
+                const razaoD = canvasDespesas.height / canvasDespesas.width;
+                const razaoR = canvasReceitas.height / canvasReceitas.width;
+                const alturaMaxima = Math.max(larguraMetade * razaoD, larguraMetade * razaoR);
+                ensureSpace(alturaMaxima + 12);
+                doc.addImage(canvasDespesas.toDataURL('image/png', 1.0), 'PNG', MARGEM, y, larguraMetade, larguraMetade * razaoD);
+                doc.addImage(canvasReceitas.toDataURL('image/png', 1.0), 'PNG', MARGEM + larguraMetade + 6, y, larguraMetade, larguraMetade * razaoR);
+                y += alturaMaxima + 10;
+            }
+
+            // ── Investimentos ──
+            if (investimentos.length > 0) {
+                adicionarImagemCanvas('grafico-investimentos', LARGURA_UTIL);
+
+                ensureSpace(20);
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(COR_PRIMARIA);
+                doc.text('Investimentos', MARGEM, y);
+                y += 5;
+
+                doc.autoTable({
+                    startY: y,
+                    margin: { left: MARGEM, right: MARGEM },
+                    theme: 'striped',
+                    head: [['Nome', 'Tipo', 'Aportado', 'Resgatado', 'Rendimentos', 'Saldo Atual']],
+                    body: investimentos.map(inv => [
+                        inv.nome,
+                        NOMES_TIPO_INVESTIMENTO[inv.tipo] || 'Outro',
+                        formatarMoeda(inv.totalAportado),
+                        formatarMoeda(inv.totalResgatado),
+                        formatarMoeda(inv.totalRendimentos),
+                        formatarMoeda(inv.saldoAtual)
+                    ]),
+                    headStyles: { fillColor: COR_PRIMARIA },
+                    columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right', fontStyle: 'bold' } }
+                });
+                y = doc.lastAutoTable.finalY + 10;
+            }
+
+            // ── Lançamentos detalhados ──
+            const NOMES_FORMA = { dinheiro: 'Dinheiro', pix: 'Pix', cartao: 'Cartão', transferencia: 'Transferência', boleto: 'Boleto', outro: 'Outro' };
+            ensureSpace(20);
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(COR_PRIMARIA);
+            doc.text('Lançamentos do Período', MARGEM, y);
+            y += 5;
+
+            doc.autoTable({
+                startY: y,
+                margin: { left: MARGEM, right: MARGEM },
+                theme: 'striped',
+                head: [['Data', 'Tipo', 'Categoria', 'Descrição', 'Forma', 'Valor']],
+                body: relatorioLinhas.map(l => [
+                    formatarData(l.data),
+                    l.tipo === 'entrada' ? 'Entrada' : 'Saída',
+                    l.categoriaNome || '—',
+                    l.descricao,
+                    NOMES_FORMA[l.formaPagamento] || '—',
+                    formatarMoeda(l.valor)
+                ]),
+                headStyles: { fillColor: COR_PRIMARIA },
+                columnStyles: { 5: { halign: 'right' } },
+                styles: { fontSize: 8 }
+            });
+
+            // ── Rodapé com numeração de página ──
+            const totalPaginas = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPaginas; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor('#6c757d');
+                doc.setFont(undefined, 'normal');
+                doc.text('Sistema de Gestão de Igreja — Módulo de Tesouraria', MARGEM, 292);
+                doc.text(`Página ${i} de ${totalPaginas}`, LARGURA - MARGEM, 292, { align: 'right' });
+            }
+
+            doc.save(`relatorio_tesouraria_${dataInicio}_a_${dataFim}.pdf`);
+        }
+    </script>
+</body>
+</html>

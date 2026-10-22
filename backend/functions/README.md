@@ -1,72 +1,39 @@
-Cloud Functions (Express) — backend
+# Backend — Express API
 
-Como usar localmente
+API REST para o Sistema de Gestão de Igrejas.
 
-- Instale dependências dentro de `backend/functions`:
+## Módulos
+
+| Arquivo | Rotas | Acesso |
+|---------|-------|--------|
+| `auth.js` | `/api/auth/login`, `/api/auth/me`, CRUD `/api/auth/usuarios` | Login: público. Usuários: Pastor |
+| `ministerios.js` | CRUD `/api/ministerios` | Leitura: todos. Escrita: Admin+ |
+| `membros.js` | CRUD `/api/membros` | Admin+ |
+| `escalas.js` | CRUD `/api/escalas` | Admin+ |
+| `conteudos.js` | CRUD `/api/conteudos` | Admin+ |
+
+## Executar localmente
 
 ```powershell
 cd backend/functions
 npm install
+copy .env.example .env   # editar com credenciais do banco
+npm run dev               # inicia em http://localhost:8080
 ```
 
-- Copie `.env.example` para `.env` e preencha as variáveis (ou use variáveis de ambiente do sistema):
+## Variáveis de ambiente
 
-```powershell
-copy .env.example .env
-# editar .env
-```
+| Variável | Descrição |
+|----------|-----------|
+| `DB_USER` | Usuário do banco de dados |
+| `DB_PASSWORD` | Senha do banco de dados |
+| `DB_SERVER` | Host do servidor SQL |
+| `DB_NAME` | Nome do banco |
+| `JWT_SECRET` | Chave secreta para tokens JWT |
+| `NODE_ENV` | `development` ou `production` |
 
-- Rode em modo desenvolvimento:
+## Deploy
 
-```powershell
-npm run dev
-```
+O `index.js` exporta como Firebase Cloud Function (`exports.api`) e também suporta execução direta (`node index.js`).
 
-Deploy no Firebase
-
-- O código já exporta `exports.api = app;` em `index.js` — para deploy via Firebase, você pode configurar o diretório de functions para `backend/functions` ou mover o conteúdo para a pasta `functions/` na raiz do projeto.
-
-- Para fornecer variáveis de ambiente seguras no Firebase você tem duas opções:
-  - Usar o Console do Firebase / Google Cloud e configurar variáveis de ambiente na seção de configurações da função (recomendado para produção).
-  - Ou usar `gcloud functions deploy` com `--set-env-vars`.
-
-Exemplo (deploy com gcloud):
-
-```bash
-gcloud functions deploy api --region=us-central1 --runtime=nodejs16 \
-  --trigger-http --allow-unauthenticated \
-  --set-env-vars "DB_USER=...,DB_PASSWORD=...,DB_SERVER=...,DB_NAME=...,JWT_SECRET=..."
-```
-
-Observações
-
-- O utilitário de DB está em `backend/utils/db.js` e já usa `process.env.DB_*`.
-- Mantenha os mocks no frontend enquanto desenvolve; o frontend agora suporta `window.APP_CONFIG` para alternar entre mocks e API real.
-
-Executando migrations e seed localmente
-
-Na raiz do projeto existem os arquivos SQL:
-
-- `database/schema.sql` — scripts DDL para criar tabelas
-- `database/seed.sql` — scripts DML para popular dados iniciais
-
-Scripts Node para executar localmente estão em `backend/scripts`:
-
-```powershell
-# a partir da raiz do repositório
-cd backend/functions
-npm install
-
-# rodar migrations (cria tabelas)
-npm run migrate
-
-# rodar seed (insere dados iniciais)
-npm run seed
-```
-
-Os scripts usam as variáveis de ambiente definidas em `.env` (ou variáveis do sistema) para conectar ao Azure SQL.
-
-Segurança
-
-- Evite rodar o `seed.sql` em produção se ele inserir dados de exemplo ou sobrescrever dados existentes.
-
+> **Nota:** O sistema atualmente opera em modo mock no frontend. Este backend precisa ser conectado a um banco SQL real para funcionar.

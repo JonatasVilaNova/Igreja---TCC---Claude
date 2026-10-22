@@ -1,275 +1,314 @@
-// Rotas para gestão de escalas
+/**
+ * escalas.js — CRUD de Escalas + Escalas-Membros + Conteúdos de Escala
+ * Usa Supabase como banco de dados.
+ */
 const express = require('express');
 const router = express.Router();
-const db = require('../utils/db');
 const { verificarToken, verificarPermissao } = require('./auth');
+const { getClient } = require('./utils/db');
 
-// Listar todas as escalas
+// Helper: mapear escala
+function mapEscala(e) {
+    return {
+        id: e.id,
+        idMinisterio: e.id_ministerio,
+        data: e.data,
+        descricao: e.descricao,
+        membros: e.escalas_membros ? e.escalas_membros.map(em => em.id_membro) : [],
+        created_at: e.created_at
+    };
+}
+
+// ════════════════════════════════════════════
+// ESCALAS
+// ════════════════════════════════════════════
+
+// GET /api/escalas — listar todas
 router.get('/', verificarToken, async (req, res) => {
-  try {
-    const query = `
-      SELECT e.id, e.idMinisterio, e.data, e.descricao,
-             m.nome as nomeMinisterio
-      FROM Escalas e
-      JOIN Ministerios m ON e.idMinisterio = m.id
-      ORDER BY e.data DESC
-    `;
-    
-    const escalas = await db.executeQuery(query);
-    res.status(200).json(escalas);
-  } catch (error) {
-    console.error('Erro ao listar escalas:', error);
-    res.status(500).json({ error: 'Erro ao listar escalas.' });
-  }
+    try {
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('escalas')
+            .select('*, escalas_membros(id_membro)')
+            .order('data', { ascending: false });
+
+        if (error) throw error;
+        res.json(data.map(mapEscala));
+    } catch (err) {
+        console.error('Erro ao listar escalas:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
 });
 
-// Obter uma escala específica
+// GET /api/escalas/:id
 router.get('/:id', verificarToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const query = `
-      SELECT e.id, e.idMinisterio, e.data, e.descricao,
-             m.nome as nomeMinisterio
-      FROM Escalas e
-      JOIN Ministerios m ON e.idMinisterio = m.id
-      WHERE e.id = @param0
-    `;
-    
-    const escalas = await db.executeQuery(query, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (escalas.length === 0) {
-      return res.status(404).json({ error: 'Escala não encontrada.' });
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('escalas')
+            .select('*, escalas_membros(id_membro)')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        if (!data) return res.status(404).json({ error: 'Escala não encontrada' });
+
+        res.json(mapEscala(data));
+    } catch (err) {
+        console.error('Erro ao obter escala:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    res.status(200).json(escalas[0]);
-  } catch (error) {
-    console.error('Erro ao obter escala:', error);
-    res.status(500).json({ error: 'Erro ao obter escala.' });
-  }
 });
 
-// Listar escalas de um ministério específico
-router.get('/ministerio/:idMinisterio', verificarToken, async (req, res) => {
-  try {
-    const { idMinisterio } = req.params;
-    
-    const query = `
-      SELECT e.id, e.idMinisterio, e.data, e.descricao,
-             m.nome as nomeMinisterio
-      FROM Escalas e
-      JOIN Ministerios m ON e.idMinisterio = m.id
-      WHERE e.idMinisterio = @param0
-      ORDER BY e.data DESC
-    `;
-    
-    const escalas = await db.executeQuery(query, [
-      { placeholder: '@param0', value: parseInt(idMinisterio) }
-    ]);
-    
-    res.status(200).json(escalas);
-  } catch (error) {
-    console.error('Erro ao listar escalas do ministério:', error);
-    res.status(500).json({ error: 'Erro ao listar escalas do ministério.' });
-  }
+// GET /api/escalas/usuario/:idUsuario — escalas de um usuário
+router.get('/usuario/:idUsuario', verificarToken, async (req, res) => {
+    try {
+        const supabase = getClient();
+
+        // Buscar IDs dos membros_ministerio desse usuário
+        const { data: membros, error: errMembros } = await supabase
+            .from('membros_ministerio')
+            .select('id')
+            .eq('id_usuario', req.params.idUsuario);
+
+        if (errMembros) throw errMembros;
+        if (!membros || membros.length === 0) return res.json([]);
+
+        const membroIds = membros.map(m => m.id);
+
+        // Buscar escalas que contêm esses membros
+        const { data: relacoes, error: errRelacoes } = await supabase
+            .from('escalas_membros')
+            .select('id_escala')
+            .in('id_membro', membroIds);
+
+        if (errRelacoes) throw errRelacoes;
+        if (!relacoes || relacoes.length === 0) return res.json([]);
+
+        const escalaIds = [...new Set(relacoes.map(r => r.id_escala))];
+
+        const { data: escalas, error: errEscalas } = await supabase
+            .from('escalas')
+            .select('*, escalas_membros(id_membro)')
+            .in('id', escalaIds)
+            .order('data', { ascending: false });
+
+        if (errEscalas) throw errEscalas;
+        res.json(escalas.map(mapEscala));
+    } catch (err) {
+        console.error('Erro ao listar escalas do usuário:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
 });
 
-// Listar escalas por período
-router.get('/periodo/:dataInicio/:dataFim', verificarToken, async (req, res) => {
-  try {
-    const { dataInicio, dataFim } = req.params;
-    
-    const query = `
-      SELECT e.id, e.idMinisterio, e.data, e.descricao,
-             m.nome as nomeMinisterio
-      FROM Escalas e
-      JOIN Ministerios m ON e.idMinisterio = m.id
-      WHERE e.data BETWEEN @param0 AND @param1
-      ORDER BY e.data
-    `;
-    
-    const escalas = await db.executeQuery(query, [
-      { placeholder: '@param0', value: dataInicio },
-      { placeholder: '@param1', value: dataFim }
-    ]);
-    
-    res.status(200).json(escalas);
-  } catch (error) {
-    console.error('Erro ao listar escalas por período:', error);
-    res.status(500).json({ error: 'Erro ao listar escalas por período.' });
-  }
+// POST /api/escalas — criar (Admin+)
+router.post('/', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const { idMinisterio, data, descricao, membros } = req.body;
+        if (!idMinisterio || !data || !descricao) {
+            return res.status(400).json({ error: 'idMinisterio, data e descricao são obrigatórios' });
+        }
+
+        const supabase = getClient();
+
+        // Criar escala
+        const { data: escala, error: errEscala } = await supabase
+            .from('escalas')
+            .insert({ id_ministerio: idMinisterio, data, descricao })
+            .select()
+            .single();
+
+        if (errEscala) throw errEscala;
+
+        // Associar membros
+        if (membros && membros.length > 0) {
+            const relacoes = membros.map(idMembro => ({
+                id_escala: escala.id,
+                id_membro: idMembro
+            }));
+            const { error: errMembros } = await supabase
+                .from('escalas_membros')
+                .insert(relacoes);
+            if (errMembros) throw errMembros;
+        }
+
+        res.status(201).json(mapEscala({ ...escala, escalas_membros: (membros || []).map(id => ({ id_membro: id })) }));
+    } catch (err) {
+        console.error('Erro ao criar escala:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
 });
 
-// Criar uma nova escala (apenas para admin ou pastor)
-router.post('/', verificarToken, verificarPermissao('admin'), async (req, res) => {
-  try {
-    const { idMinisterio, data, descricao } = req.body;
-    
-    if (!idMinisterio || !data || !descricao) {
-      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+// PUT /api/escalas/:id — atualizar (Admin+)
+router.put('/:id', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const { idMinisterio, data, descricao, membros } = req.body;
+        const updateData = {};
+        if (idMinisterio) updateData.id_ministerio = idMinisterio;
+        if (data) updateData.data = data;
+        if (descricao) updateData.descricao = descricao;
+
+        const supabase = getClient();
+
+        const { data: escala, error: errEscala } = await supabase
+            .from('escalas')
+            .update(updateData)
+            .eq('id', req.params.id)
+            .select()
+            .single();
+
+        if (errEscala) throw errEscala;
+
+        // Atualizar membros: remover todos e reinserir
+        if (membros !== undefined) {
+            await supabase.from('escalas_membros').delete().eq('id_escala', req.params.id);
+            if (membros.length > 0) {
+                const relacoes = membros.map(idMembro => ({
+                    id_escala: parseInt(req.params.id),
+                    id_membro: idMembro
+                }));
+                await supabase.from('escalas_membros').insert(relacoes);
+            }
+        }
+
+        // Recarregar com membros
+        const { data: escalaFinal } = await supabase
+            .from('escalas')
+            .select('*, escalas_membros(id_membro)')
+            .eq('id', req.params.id)
+            .single();
+
+        res.json(mapEscala(escalaFinal));
+    } catch (err) {
+        console.error('Erro ao atualizar escala:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    // Verificar se o ministério existe
-    const queryVerificarMinisterio = `
-      SELECT COUNT(*) as count
-      FROM Ministerios
-      WHERE id = @param0
-    `;
-    
-    const resultadoMinisterio = await db.executeQuery(queryVerificarMinisterio, [
-      { placeholder: '@param0', value: idMinisterio }
-    ]);
-    
-    if (resultadoMinisterio[0].count === 0) {
-      return res.status(400).json({ error: 'Ministério não encontrado.' });
-    }
-    
-    // Inserir nova escala
-    const queryInserir = `
-      INSERT INTO Escalas (idMinisterio, data, descricao)
-      VALUES (@param0, @param1, @param2);
-      SELECT SCOPE_IDENTITY() as id;
-    `;
-    
-    const resultadoInsercao = await db.executeQuery(queryInserir, [
-      { placeholder: '@param0', value: idMinisterio },
-      { placeholder: '@param1', value: data },
-      { placeholder: '@param2', value: descricao }
-    ]);
-    
-    const id = resultadoInsercao[0].id;
-    
-    // Obter informações completas da escala
-    const queryObterEscala = `
-      SELECT e.id, e.idMinisterio, e.data, e.descricao,
-             m.nome as nomeMinisterio
-      FROM Escalas e
-      JOIN Ministerios m ON e.idMinisterio = m.id
-      WHERE e.id = @param0
-    `;
-    
-    const escalas = await db.executeQuery(queryObterEscala, [
-      { placeholder: '@param0', value: id }
-    ]);
-    
-    res.status(201).json(escalas[0]);
-  } catch (error) {
-    console.error('Erro ao criar escala:', error);
-    res.status(500).json({ error: 'Erro ao criar escala.' });
-  }
 });
 
-// Atualizar uma escala (apenas para admin ou pastor)
-router.put('/:id', verificarToken, verificarPermissao('admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { idMinisterio, data, descricao } = req.body;
-    
-    if (!idMinisterio || !data || !descricao) {
-      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+// DELETE /api/escalas/:id — excluir (Admin+)
+router.delete('/:id', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const supabase = getClient();
+        const { error } = await supabase.from('escalas').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ message: 'Escala excluída com sucesso' });
+    } catch (err) {
+        console.error('Erro ao excluir escala:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    // Verificar se a escala existe
-    const queryVerificar = `
-      SELECT *
-      FROM Escalas
-      WHERE id = @param0
-    `;
-    
-    const escalas = await db.executeQuery(queryVerificar, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (escalas.length === 0) {
-      return res.status(404).json({ error: 'Escala não encontrada.' });
-    }
-    
-    // Verificar se o ministério existe
-    const queryVerificarMinisterio = `
-      SELECT COUNT(*) as count
-      FROM Ministerios
-      WHERE id = @param0
-    `;
-    
-    const resultadoMinisterio = await db.executeQuery(queryVerificarMinisterio, [
-      { placeholder: '@param0', value: idMinisterio }
-    ]);
-    
-    if (resultadoMinisterio[0].count === 0) {
-      return res.status(400).json({ error: 'Ministério não encontrado.' });
-    }
-    
-    // Atualizar escala
-    const queryAtualizar = `
-      UPDATE Escalas
-      SET idMinisterio = @param0, data = @param1, descricao = @param2
-      WHERE id = @param3
-    `;
-    
-    await db.executeQuery(queryAtualizar, [
-      { placeholder: '@param0', value: idMinisterio },
-      { placeholder: '@param1', value: data },
-      { placeholder: '@param2', value: descricao },
-      { placeholder: '@param3', value: parseInt(id) }
-    ]);
-    
-    // Obter escala atualizada
-    const queryObterAtualizada = `
-      SELECT e.id, e.idMinisterio, e.data, e.descricao,
-             m.nome as nomeMinisterio
-      FROM Escalas e
-      JOIN Ministerios m ON e.idMinisterio = m.id
-      WHERE e.id = @param0
-    `;
-    
-    const escalasAtualizadas = await db.executeQuery(queryObterAtualizada, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    res.status(200).json(escalasAtualizadas[0]);
-  } catch (error) {
-    console.error('Erro ao atualizar escala:', error);
-    res.status(500).json({ error: 'Erro ao atualizar escala.' });
-  }
 });
 
-// Excluir uma escala (apenas para admin ou pastor)
-router.delete('/:id', verificarToken, verificarPermissao('admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Verificar se a escala existe
-    const queryVerificar = `
-      SELECT *
-      FROM Escalas
-      WHERE id = @param0
-    `;
-    
-    const escalas = await db.executeQuery(queryVerificar, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (escalas.length === 0) {
-      return res.status(404).json({ error: 'Escala não encontrada.' });
+// ════════════════════════════════════════════
+// CONTEÚDOS DE ESCALA
+// ════════════════════════════════════════════
+
+// GET /api/escalas/conteudos/:idEscala
+router.get('/conteudos/:idEscala', verificarToken, async (req, res) => {
+    try {
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('conteudos_escala')
+            .select('*')
+            .eq('id_escala', req.params.idEscala)
+            .order('created_at');
+
+        if (error) throw error;
+        res.json(data.map(c => ({
+            id: c.id,
+            idEscala: c.id_escala,
+            tipo: c.tipo,
+            titulo: c.titulo,
+            detalhes: c.detalhes,
+            link: c.link
+        })));
+    } catch (err) {
+        console.error('Erro ao listar conteúdos da escala:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    // Excluir a escala
-    const queryExcluir = `
-      DELETE FROM Escalas
-      WHERE id = @param0
-    `;
-    
-    await db.executeQuery(queryExcluir, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    res.status(200).json({ message: 'Escala excluída com sucesso.' });
-  } catch (error) {
-    console.error('Erro ao excluir escala:', error);
-    res.status(500).json({ error: 'Erro ao excluir escala.' });
-  }
+});
+
+// POST /api/escalas/conteudos/:idEscala
+router.post('/conteudos/:idEscala', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const { tipo, titulo, detalhes, link } = req.body;
+        if (!tipo || !titulo) {
+            return res.status(400).json({ error: 'Tipo e título são obrigatórios' });
+        }
+
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('conteudos_escala')
+            .insert({
+                id_escala: parseInt(req.params.idEscala),
+                tipo, titulo,
+                detalhes: detalhes || null,
+                link: link || null
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.status(201).json({
+            id: data.id,
+            idEscala: data.id_escala,
+            tipo: data.tipo,
+            titulo: data.titulo,
+            detalhes: data.detalhes,
+            link: data.link
+        });
+    } catch (err) {
+        console.error('Erro ao criar conteúdo da escala:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// PUT /api/escalas/conteudos/:idEscala/:id
+router.put('/conteudos/:idEscala/:id', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const { tipo, titulo, detalhes, link } = req.body;
+        const updateData = {};
+        if (tipo) updateData.tipo = tipo;
+        if (titulo) updateData.titulo = titulo;
+        if (detalhes !== undefined) updateData.detalhes = detalhes;
+        if (link !== undefined) updateData.link = link;
+
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('conteudos_escala')
+            .update(updateData)
+            .eq('id', req.params.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({
+            id: data.id,
+            idEscala: data.id_escala,
+            tipo: data.tipo,
+            titulo: data.titulo,
+            detalhes: data.detalhes,
+            link: data.link
+        });
+    } catch (err) {
+        console.error('Erro ao atualizar conteúdo da escala:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// DELETE /api/escalas/conteudos/:idEscala/:id
+router.delete('/conteudos/:idEscala/:id', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const supabase = getClient();
+        const { error } = await supabase.from('conteudos_escala').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ message: 'Conteúdo excluído com sucesso' });
+    } catch (err) {
+        console.error('Erro ao excluir conteúdo da escala:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
 });
 
 module.exports = router;

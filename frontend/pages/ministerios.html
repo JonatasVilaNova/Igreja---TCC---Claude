@@ -7,7 +7,7 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
     <!-- Estilos Personalizados -->
     <link rel="stylesheet" href="../css/styles.css">
 </head>
@@ -15,8 +15,8 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-church me-2"></i>
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <span class="navbar-logo"></span>
                 Sistema de Gestão de Igreja
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -207,7 +207,7 @@
             try {
                 // Carregar dados
                 ministerios = await fetchAPI('ministerios');
-                usuarios = await fetchAPI('usuarios');
+                try { usuarios = await fetchAPI('usuarios'); } catch(e) { console.warn('Não foi possível carregar usuarios:', e); }
                 
                 // Preencher lista de ministérios
                 atualizarListaMinisterios();
@@ -324,21 +324,24 @@
             
             // Configurar eventos dos botões
             document.querySelectorAll('.ver-membros').forEach(btn => {
-                btn.addEventListener('click', () => abrirModalMembros(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => abrirModalMembros(btn.dataset.id));
             });
             
             document.querySelectorAll('.editar-ministerio').forEach(btn => {
-                btn.addEventListener('click', () => abrirModalEditarMinisterio(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => abrirModalEditarMinisterio(btn.dataset.id));
             });
             
             document.querySelectorAll('.excluir-ministerio').forEach(btn => {
-                btn.addEventListener('click', () => excluirMinisterio(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => excluirMinisterio(btn.dataset.id));
             });
+            
+            // Atualizar visibilidade admin-only nos elementos recém-criados
+            atualizarVisibilidadePerfil();
         }
         
         // Função para abrir o modal de edição de ministério
         function abrirModalEditarMinisterio(id) {
-            const ministerio = ministerios.find(m => m.id === id);
+            const ministerio = ministerios.find(m => String(m.id) === String(id));
             
             if (!ministerio) return;
             
@@ -411,7 +414,7 @@
                 await fetchAPI(`ministerios/${id}`, 'DELETE');
                 
                 // Remover da lista local
-                ministerios = ministerios.filter(m => m.id !== id);
+                ministerios = ministerios.filter(m => String(m.id) !== String(id));
                 
                 atualizarListaMinisterios();
             } catch (error) {
@@ -423,7 +426,7 @@
         // Função para abrir o modal de membros
         async function abrirModalMembros(id) {
             ministerioAtual = id;
-            const ministerio = ministerios.find(m => m.id === id);
+            const ministerio = ministerios.find(m => String(m.id) === String(id));
             
             if (!ministerio) return;
             
@@ -475,11 +478,11 @@
             
             // Configurar eventos dos botões
             document.querySelectorAll('.editar-membro').forEach(btn => {
-                btn.addEventListener('click', () => abrirModalEditarMembro(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => abrirModalEditarMembro(btn.dataset.id));
             });
             
             document.querySelectorAll('.excluir-membro').forEach(btn => {
-                btn.addEventListener('click', () => excluirMembro(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => excluirMembro(btn.dataset.id));
             });
         }
         
@@ -511,7 +514,7 @@
         
         // Função para abrir o modal de editar membro
         function abrirModalEditarMembro(id) {
-            const membro = membrosMinisterio.find(m => m.id === id);
+            const membro = membrosMinisterio.find(m => String(m.id) === String(id));
             
             if (!membro) return;
             
@@ -601,7 +604,7 @@
                 await fetchAPI(`membros/${id}`, 'DELETE');
                 
                 // Remover da lista local
-                membrosMinisterio = membrosMinisterio.filter(m => m.id !== id);
+                membrosMinisterio = membrosMinisterio.filter(m => String(m.id) !== String(id));
                 
                 atualizarTabelaMembros();
             } catch (error) {

@@ -7,7 +7,7 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
     <!-- Estilos Personalizados -->
     <link rel="stylesheet" href="../css/styles.css">
     <!-- Sortable.js para drag-and-drop -->
@@ -53,9 +53,7 @@
                     <h1>Ordem de Culto</h1>
                     <div class="d-flex">
                         <select class="form-select me-2" id="select-culto">
-                            <option value="proximo">Próximo Culto (31/05/2025)</option>
-                            <option value="anterior">Culto Anterior (24/05/2025)</option>
-                            <option value="modelo">Modelo Padrão</option>
+                            <option value="">Carregando...</option>
                         </select>
                         <button class="btn btn-primary admin-only" data-bs-toggle="modal" data-bs-target="#modalOrdemCulto">
                             <i class="fas fa-plus me-2"></i>Novo Culto
@@ -84,12 +82,12 @@
                         </div>
                         
                         <div id="ordem-culto-conteudo" style="display: none;">
-                            <div class="alert alert-info mb-4">
+                            <div class="alert alert-info mb-4" id="info-culto">
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-info-circle fa-2x me-3"></i>
                                     <div>
                                         <strong>Informações do Culto</strong>
-                                        <p class="mb-0">Horário: 10:00 - 12:00 | Local: Templo Principal | Dirigente: Pr. João Silva</p>
+                                        <p class="mb-0" id="info-culto-detalhes">Carregando...</p>
                                     </div>
                                 </div>
                             </div>
@@ -288,25 +286,16 @@
     <script>
         // Dados da ordem de culto
         let ordemCulto = null;
+        let todasOrdens = [];
         let modoEdicao = false;
         let itemParaEditar = null;
         
         document.addEventListener('DOMContentLoaded', function() {
-            // Verificar login
             const usuario = verificarLogin();
-            
             if (!usuario) return;
             
-            // Configurar sidebar mobile
-            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
-            if (sidebarToggleBtn) {
-                sidebarToggleBtn.addEventListener('click', function() {
-                    document.querySelector('.sidebar').classList.toggle('show');
-                });
-            }
-            
             // Configurar eventos
-            document.getElementById('select-culto').addEventListener('change', carregarOrdemCulto);
+            document.getElementById('select-culto').addEventListener('change', selecionarCulto);
             document.getElementById('btn-editar-ordem').addEventListener('click', ativarModoEdicao);
             document.getElementById('btn-cancelar-edicao').addEventListener('click', desativarModoEdicao);
             document.getElementById('btn-salvar-ordem').addEventListener('click', salvarOrdemCulto);
@@ -314,262 +303,77 @@
             document.getElementById('btn-salvar-item').addEventListener('click', salvarItem);
             document.getElementById('btn-copiar-link').addEventListener('click', copiarLinkCompartilhamento);
             
-            // Configurar botões de compartilhamento
             document.getElementById('btn-compartilhar-whatsapp').addEventListener('click', () => compartilharVia('whatsapp'));
             document.getElementById('btn-compartilhar-email').addEventListener('click', () => compartilharVia('email'));
             document.getElementById('btn-compartilhar-telegram').addEventListener('click', () => compartilharVia('telegram'));
-            
-            // Configurar botões de exportação
             document.getElementById('btn-exportar-pdf').addEventListener('click', () => exportarOrdemCulto('pdf'));
             document.getElementById('btn-exportar-imagem').addEventListener('click', () => exportarOrdemCulto('imagem'));
             
-            // Carregar ordem de culto inicial
-            carregarOrdemCulto();
+            // Carregar todas as ordens de culto
+            carregarTodasOrdens();
         });
-        
-        // Função para carregar ordem de culto
-        async function carregarOrdemCulto() {
-            const cultoSelecionado = document.getElementById('select-culto').value;
-            
-            // Mostrar loading
+
+        // Carregar todas as ordens de culto via fetchAPI
+        async function carregarTodasOrdens() {
             document.getElementById('ordem-culto-loading').style.display = 'block';
             document.getElementById('ordem-culto-conteudo').style.display = 'none';
             document.getElementById('ordem-culto-vazio').style.display = 'none';
             document.getElementById('ordem-culto-erro').style.display = 'none';
+
+            try {
+                todasOrdens = await fetchAPI('ordens-culto');
+                
+                // Popular o select
+                const select = document.getElementById('select-culto');
+                select.innerHTML = '';
+                todasOrdens.forEach((ordem, index) => {
+                    const opt = document.createElement('option');
+                    opt.value = ordem.id;
+                    const label = ordem.data ? `${ordem.titulo} (${formatarData(ordem.data)})` : ordem.titulo;
+                    opt.textContent = label;
+                    select.appendChild(opt);
+                });
+                
+                if (todasOrdens.length > 0) {
+                    selecionarCulto();
+                } else {
+                    document.getElementById('ordem-culto-loading').style.display = 'none';
+                    document.getElementById('ordem-culto-vazio').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar ordens de culto:', error);
+                document.getElementById('ordem-culto-loading').style.display = 'none';
+                document.getElementById('ordem-culto-erro').style.display = 'block';
+            }
+        }
+        
+        // Selecionar e exibir um culto do select
+        async function selecionarCulto() {
+            const id = parseInt(document.getElementById('select-culto').value);
+            
+            document.getElementById('ordem-culto-loading').style.display = 'block';
+            document.getElementById('ordem-culto-conteudo').style.display = 'none';
             
             try {
-                // Em uma implementação real, aqui seria feita uma chamada à API
-                // Para esta demonstração, vamos simular uma resposta
+                ordemCulto = await fetchAPI(`ordens-culto/${id}`);
                 
-                // Simular delay de rede
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Simular resposta da API
-                if (cultoSelecionado === 'proximo') {
-                    ordemCulto = {
-                        id: 1,
-                        titulo: 'Culto de Celebração - Domingo, 31/05/2025',
-                        data: '2025-05-31',
-                        horaInicio: '10:00',
-                        horaFim: '12:00',
-                        local: 'Templo Principal',
-                        dirigente: 'Pr. João Silva',
-                        itens: [
-                            {
-                                id: 1,
-                                titulo: 'Prelúdio',
-                                tipo: 'louvor',
-                                responsavel: 'Ministério de Louvor',
-                                duracao: 5,
-                                descricao: 'Música instrumental de abertura'
-                            },
-                            {
-                                id: 2,
-                                titulo: 'Boas-vindas e Oração',
-                                tipo: 'oracao',
-                                responsavel: 'Pr. João Silva',
-                                duracao: 5,
-                                descricao: 'Boas-vindas aos visitantes e oração inicial'
-                            },
-                            {
-                                id: 3,
-                                titulo: 'Louvor e Adoração',
-                                tipo: 'louvor',
-                                responsavel: 'Ministério de Louvor',
-                                duracao: 20,
-                                descricao: 'Momento de louvor congregacional'
-                            },
-                            {
-                                id: 4,
-                                titulo: 'Leitura Bíblica',
-                                tipo: 'leitura',
-                                responsavel: 'Diác. Maria Oliveira',
-                                duracao: 5,
-                                descricao: 'Salmos 100'
-                            },
-                            {
-                                id: 5,
-                                titulo: 'Oferta',
-                                tipo: 'oferta',
-                                responsavel: 'Diáconos',
-                                duracao: 10,
-                                descricao: 'Momento de contribuição e gratidão'
-                            },
-                            {
-                                id: 6,
-                                titulo: 'Mensagem',
-                                tipo: 'mensagem',
-                                responsavel: 'Pr. João Silva',
-                                duracao: 40,
-                                descricao: 'Tema: "O Poder da Gratidão"'
-                            },
-                            {
-                                id: 7,
-                                titulo: 'Oração Final',
-                                tipo: 'oracao',
-                                responsavel: 'Pr. João Silva',
-                                duracao: 5,
-                                descricao: 'Oração de encerramento'
-                            },
-                            {
-                                id: 8,
-                                titulo: 'Avisos',
-                                tipo: 'anuncios',
-                                responsavel: 'Secretaria',
-                                duracao: 5,
-                                descricao: 'Informações sobre próximos eventos'
-                            },
-                            {
-                                id: 9,
-                                titulo: 'Bênção Apostólica',
-                                tipo: 'bencao',
-                                responsavel: 'Pr. João Silva',
-                                duracao: 5,
-                                descricao: 'Bênção final'
-                            }
-                        ]
-                    };
-                } else if (cultoSelecionado === 'anterior') {
-                    ordemCulto = {
-                        id: 2,
-                        titulo: 'Culto de Celebração - Domingo, 24/05/2025',
-                        data: '2025-05-24',
-                        horaInicio: '10:00',
-                        horaFim: '12:00',
-                        local: 'Templo Principal',
-                        dirigente: 'Pr. João Silva',
-                        itens: [
-                            {
-                                id: 1,
-                                titulo: 'Prelúdio',
-                                tipo: 'louvor',
-                                responsavel: 'Ministério de Louvor',
-                                duracao: 5,
-                                descricao: 'Música instrumental de abertura'
-                            },
-                            {
-                                id: 2,
-                                titulo: 'Boas-vindas e Oração',
-                                tipo: 'oracao',
-                                responsavel: 'Pr. João Silva',
-                                duracao: 5,
-                                descricao: 'Boas-vindas aos visitantes e oração inicial'
-                            },
-                            {
-                                id: 3,
-                                titulo: 'Louvor e Adoração',
-                                tipo: 'louvor',
-                                responsavel: 'Ministério de Louvor',
-                                duracao: 20,
-                                descricao: 'Momento de louvor congregacional'
-                            },
-                            {
-                                id: 4,
-                                titulo: 'Mensagem',
-                                tipo: 'mensagem',
-                                responsavel: 'Pr. João Silva',
-                                duracao: 40,
-                                descricao: 'Tema: "Fé em Tempos Difíceis"'
-                            },
-                            {
-                                id: 5,
-                                titulo: 'Oração Final',
-                                tipo: 'oracao',
-                                responsavel: 'Pr. João Silva',
-                                duracao: 5,
-                                descricao: 'Oração de encerramento'
-                            },
-                            {
-                                id: 6,
-                                titulo: 'Bênção Apostólica',
-                                tipo: 'bencao',
-                                responsavel: 'Pr. João Silva',
-                                duracao: 5,
-                                descricao: 'Bênção final'
-                            }
-                        ]
-                    };
-                } else {
-                    ordemCulto = {
-                        id: 3,
-                        titulo: 'Modelo Padrão de Culto',
-                        data: null,
-                        horaInicio: '10:00',
-                        horaFim: '12:00',
-                        local: 'Templo Principal',
-                        dirigente: '',
-                        itens: [
-                            {
-                                id: 1,
-                                titulo: 'Prelúdio',
-                                tipo: 'louvor',
-                                responsavel: 'Ministério de Louvor',
-                                duracao: 5,
-                                descricao: 'Música instrumental de abertura'
-                            },
-                            {
-                                id: 2,
-                                titulo: 'Boas-vindas e Oração',
-                                tipo: 'oracao',
-                                responsavel: '',
-                                duracao: 5,
-                                descricao: 'Boas-vindas aos visitantes e oração inicial'
-                            },
-                            {
-                                id: 3,
-                                titulo: 'Louvor e Adoração',
-                                tipo: 'louvor',
-                                responsavel: 'Ministério de Louvor',
-                                duracao: 20,
-                                descricao: 'Momento de louvor congregacional'
-                            },
-                            {
-                                id: 4,
-                                titulo: 'Leitura Bíblica',
-                                tipo: 'leitura',
-                                responsavel: '',
-                                duracao: 5,
-                                descricao: ''
-                            },
-                            {
-                                id: 5,
-                                titulo: 'Mensagem',
-                                tipo: 'mensagem',
-                                responsavel: '',
-                                duracao: 40,
-                                descricao: ''
-                            },
-                            {
-                                id: 6,
-                                titulo: 'Oração Final',
-                                tipo: 'oracao',
-                                responsavel: '',
-                                duracao: 5,
-                                descricao: 'Oração de encerramento'
-                            },
-                            {
-                                id: 7,
-                                titulo: 'Bênção Apostólica',
-                                tipo: 'bencao',
-                                responsavel: '',
-                                duracao: 5,
-                                descricao: 'Bênção final'
-                            }
-                        ]
-                    };
+                if (!ordemCulto) {
+                    document.getElementById('ordem-culto-loading').style.display = 'none';
+                    document.getElementById('ordem-culto-vazio').style.display = 'block';
+                    return;
                 }
                 
-                // Atualizar título
-                document.getElementById('titulo-culto').textContent = ordemCulto.titulo;
+                // Atualizar título e info
+                const titleLabel = ordemCulto.data ? `${ordemCulto.titulo} - ${formatarData(ordemCulto.data)}` : ordemCulto.titulo;
+                document.getElementById('titulo-culto').textContent = titleLabel;
+                document.getElementById('info-culto-detalhes').textContent = 
+                    `Horário: ${ordemCulto.horaInicio || '—'} - ${ordemCulto.horaFim || '—'} | Local: ${ordemCulto.local || '—'} | Dirigente: ${ordemCulto.dirigente || '—'}`;
                 
-                // Preencher lista de itens
                 atualizarListaItens();
                 
-                // Mostrar conteúdo
                 document.getElementById('ordem-culto-loading').style.display = 'none';
                 document.getElementById('ordem-culto-conteudo').style.display = 'block';
                 
-                // Desativar modo de edição
                 desativarModoEdicao();
             } catch (error) {
                 console.error('Erro ao carregar ordem de culto:', error);
@@ -663,11 +467,11 @@
             // Configurar eventos dos botões no modo de edição
             if (modoEdicao) {
                 document.querySelectorAll('.btn-editar-item').forEach(btn => {
-                    btn.addEventListener('click', () => editarItem(parseInt(btn.dataset.id)));
+                    btn.addEventListener('click', () => editarItem(btn.dataset.id));
                 });
                 
                 document.querySelectorAll('.btn-excluir-item').forEach(btn => {
-                    btn.addEventListener('click', () => excluirItem(parseInt(btn.dataset.id)));
+                    btn.addEventListener('click', () => excluirItem(btn.dataset.id));
                 });
                 
                 // Inicializar Sortable.js para drag-and-drop
@@ -734,7 +538,7 @@
         
         // Função para editar item
         function editarItem(id) {
-            const item = ordemCulto.itens.find(i => i.id === id);
+            const item = ordemCulto.itens.find(i => String(i.id) === String(id));
             
             if (!item) return;
             
@@ -759,7 +563,7 @@
             if (!confirm('Tem certeza que deseja excluir este item?')) return;
             
             // Remover item da lista
-            ordemCulto.itens = ordemCulto.itens.filter(i => i.id !== id);
+            ordemCulto.itens = ordemCulto.itens.filter(i => String(i.id) !== String(id));
             
             // Atualizar lista
             atualizarListaItens();
@@ -824,7 +628,7 @@
             const itensReordenados = [];
             
             novaOrdem.forEach(id => {
-                const item = ordemCulto.itens.find(i => i.id === id);
+                const item = ordemCulto.itens.find(i => String(i.id) === String(id));
                 if (item) {
                     itensReordenados.push(item);
                 }
@@ -834,19 +638,20 @@
             ordemCulto.itens = itensReordenados;
         }
         
-        // Função para salvar ordem de culto
+        // Salvar ordem de culto via fetchAPI
         async function salvarOrdemCulto() {
             try {
-                // Em uma implementação real, aqui seria feita uma chamada à API
-                // Para esta demonstração, vamos simular uma resposta
+                await fetchAPI(`ordens-culto/${ordemCulto.id}`, 'PUT', {
+                    titulo: ordemCulto.titulo,
+                    data: ordemCulto.data,
+                    horaInicio: ordemCulto.horaInicio,
+                    horaFim: ordemCulto.horaFim,
+                    local: ordemCulto.local,
+                    dirigente: ordemCulto.dirigente,
+                    itens: ordemCulto.itens
+                });
                 
-                // Simular delay de rede
-                await new Promise(resolve => setTimeout(resolve, 800));
-                
-                // Desativar modo de edição
                 desativarModoEdicao();
-                
-                // Mostrar mensagem de sucesso
                 alert('Ordem de culto salva com sucesso!');
             } catch (error) {
                 console.error('Erro ao salvar ordem de culto:', error);
@@ -854,16 +659,11 @@
             }
         }
         
-        // Função para criar novo culto
+        // Criar novo culto via fetchAPI
         async function criarNovoCulto() {
-            // Validar formulário
             const form = document.getElementById('form-culto');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
+            if (!form.checkValidity()) { form.reportValidity(); return; }
             
-            // Obter dados do formulário
             const titulo = document.getElementById('culto-titulo').value;
             const data = document.getElementById('culto-data').value;
             const horaInicio = document.getElementById('culto-hora-inicio').value;
@@ -872,110 +672,49 @@
             const dirigente = document.getElementById('culto-dirigente').value;
             const modelo = document.getElementById('culto-modelo').value;
             
-            try {
-                // Em uma implementação real, aqui seria feita uma chamada à API
-                // Para esta demonstração, vamos simular uma resposta
-                
-                // Simular delay de rede
-                await new Promise(resolve => setTimeout(resolve, 800));
-                
-                // Criar novo culto
-                ordemCulto = {
-                    id: Math.floor(Math.random() * 1000) + 10,
-                    titulo,
-                    data,
-                    horaInicio,
-                    horaFim,
-                    local,
-                    dirigente,
-                    itens: []
-                };
-                
-                // Adicionar itens do modelo selecionado
-                if (modelo === 'padrao') {
-                    ordemCulto.itens = [
-                        {
-                            id: 1,
-                            titulo: 'Prelúdio',
-                            tipo: 'louvor',
-                            responsavel: 'Ministério de Louvor',
-                            duracao: 5,
-                            descricao: 'Música instrumental de abertura'
-                        },
-                        {
-                            id: 2,
-                            titulo: 'Boas-vindas e Oração',
-                            tipo: 'oracao',
-                            responsavel: dirigente,
-                            duracao: 5,
-                            descricao: 'Boas-vindas aos visitantes e oração inicial'
-                        },
-                        {
-                            id: 3,
-                            titulo: 'Louvor e Adoração',
-                            tipo: 'louvor',
-                            responsavel: 'Ministério de Louvor',
-                            duracao: 20,
-                            descricao: 'Momento de louvor congregacional'
-                        },
-                        {
-                            id: 4,
-                            titulo: 'Leitura Bíblica',
-                            tipo: 'leitura',
-                            responsavel: '',
-                            duracao: 5,
-                            descricao: ''
-                        },
-                        {
-                            id: 5,
-                            titulo: 'Mensagem',
-                            tipo: 'mensagem',
-                            responsavel: dirigente,
-                            duracao: 40,
-                            descricao: ''
-                        },
-                        {
-                            id: 6,
-                            titulo: 'Oração Final',
-                            tipo: 'oracao',
-                            responsavel: dirigente,
-                            duracao: 5,
-                            descricao: 'Oração de encerramento'
-                        },
-                        {
-                            id: 7,
-                            titulo: 'Bênção Apostólica',
-                            tipo: 'bencao',
-                            responsavel: dirigente,
-                            duracao: 5,
-                            descricao: 'Bênção final'
-                        }
-                    ];
+            // Preparar itens do modelo se selecionado
+            let itens = [];
+            if (modelo === 'padrao') {
+                // Buscar o modelo padrão (sem data) da lista
+                const modeloPadrao = todasOrdens.find(o => o.data === null);
+                if (modeloPadrao && modeloPadrao.itens) {
+                    itens = modeloPadrao.itens.map(i => ({
+                        titulo: i.titulo, tipo: i.tipo,
+                        responsavel: i.responsavel || dirigente,
+                        duracao: i.duracao, descricao: i.descricao
+                    }));
                 }
+            } else if (modelo === 'ultimo' && todasOrdens.length > 0) {
+                const ultimo = todasOrdens.find(o => o.data !== null);
+                if (ultimo && ultimo.itens) {
+                    itens = ultimo.itens.map(i => ({
+                        titulo: i.titulo, tipo: i.tipo,
+                        responsavel: i.responsavel,
+                        duracao: i.duracao, descricao: i.descricao
+                    }));
+                }
+            }
+            
+            try {
+                const novoCulto = await fetchAPI('ordens-culto', 'POST', {
+                    titulo, data, horaInicio, horaFim, local, dirigente, itens
+                });
                 
-                // Fechar modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalOrdemCulto'));
                 modal.hide();
-                
-                // Limpar formulário
                 form.reset();
                 
-                // Atualizar título
-                document.getElementById('titulo-culto').textContent = titulo;
+                // Recarregar lista e selecionar o novo
+                await carregarTodasOrdens();
                 
-                // Atualizar lista de itens
-                atualizarListaItens();
+                // Selecionar o novo culto no dropdown
+                const select = document.getElementById('select-culto');
+                if (novoCulto && novoCulto.id) {
+                    select.value = novoCulto.id;
+                    await selecionarCulto();
+                }
                 
-                // Mostrar conteúdo
-                document.getElementById('ordem-culto-loading').style.display = 'none';
-                document.getElementById('ordem-culto-conteudo').style.display = 'block';
-                document.getElementById('ordem-culto-vazio').style.display = 'none';
-                document.getElementById('ordem-culto-erro').style.display = 'none';
-                
-                // Ativar modo de edição
                 ativarModoEdicao();
-                
-                // Mostrar mensagem de sucesso
                 alert('Culto criado com sucesso! Agora você pode adicionar itens à ordem de culto.');
             } catch (error) {
                 console.error('Erro ao criar culto:', error);

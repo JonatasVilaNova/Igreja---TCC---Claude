@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudos e Pregações - Sistema de Gestão de Igreja</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+    <!-- Quill (editor de texto rico) -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <!-- Estilos Personalizados -->
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .ql-editor { min-height: 300px; background: #fff; }
+        .ql-toolbar.ql-snow { border-radius: 5px 5px 0 0; }
+        .ql-container.ql-snow { border-radius: 0 0 5px 5px; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+                <span class="navbar-logo"></span>
+                Sistema de Gestão de Igreja
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>
+                            <span class="nome-usuario">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="perfil.html"><i class="fas fa-id-card me-2"></i>Meu Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div class="container-fluid">
+
+            <div id="estudos-acesso-negado" class="alert alert-danger" style="display:none">
+                <i class="fas fa-lock me-2"></i>
+                Somente Pastor e Líderes de Ministério podem gerenciar Estudos e Pregações.
+            </div>
+
+            <!-- Vista de Lista -->
+            <div id="view-lista">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="mb-0"><i class="fas fa-book-bible me-2"></i>Estudos e Pregações</h1>
+                    <button class="btn btn-primary" id="btn-novo-estudo">
+                        <i class="fas fa-plus me-2"></i>Novo Estudo/Pregação
+                    </button>
+                </div>
+
+                <p class="text-muted">
+                    Estudos e pregações marcados como <strong>Publicado</strong> aparecem automaticamente na área
+                    de Estudos do site da igreja (site institucional).
+                </p>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Tipo</th>
+                                        <th>Autor</th>
+                                        <th>Data</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-estudos">
+                                    <!-- Preenchido via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista de Editor -->
+            <div id="view-editor" style="display:none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="mb-0" id="editor-titulo-pagina">Novo Estudo/Pregação</h1>
+                    <button class="btn btn-outline-secondary" id="btn-voltar-lista">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </button>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <form id="form-estudo">
+                            <input type="hidden" id="estudo-id">
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="estudo-titulo" class="form-label">Título</label>
+                                    <input type="text" class="form-control" id="estudo-titulo" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="estudo-tipo" class="form-label">Tipo</label>
+                                    <select class="form-select" id="estudo-tipo">
+                                        <option value="estudo">Estudo Bíblico</option>
+                                        <option value="pregacao">Pregação</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="estudo-tema" class="form-label">Tema</label>
+                                    <input type="text" class="form-control" id="estudo-tema" placeholder="Ex: Fé, Graça, Família...">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="estudo-texto-base" class="form-label">Texto Base</label>
+                                    <input type="text" class="form-control" id="estudo-texto-base" placeholder="Ex: João 3:16">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="estudo-resumo" class="form-label">Resumo</label>
+                                <textarea class="form-control" id="estudo-resumo" rows="2" placeholder="Breve resumo exibido na listagem pública"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Conteúdo</label>
+                                <div id="estudo-editor"></div>
+                            </div>
+                            <div class="row align-items-end">
+                                <div class="col-md-4 mb-3">
+                                    <label for="estudo-data" class="form-label">Data de Publicação</label>
+                                    <input type="date" class="form-control" id="estudo-data">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check form-switch mt-4">
+                                        <input class="form-check-input" type="checkbox" id="estudo-publicado">
+                                        <label class="form-check-label" for="estudo-publicado">
+                                            Publicado (visível no site da igreja)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer bg-white d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" id="btn-cancelar-estudo">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="btn-salvar-estudo">Salvar</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Quill (editor de texto rico) -->
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    <!-- Configuração Central -->
+    <script src="../js/config.js"></script>
+    <!-- App JS -->
+    <script src="../js/app.js"></script>
+    <!-- Sidebar Loader -->
+    <script src="../js/sidebar-loader.js"></script>
+
+    <script>
+        let estudos = [];
+        let quill = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const usuario = verificarLogin();
+            if (!usuario) return;
+
+            if (!window.usuarioTemPerfil || !window.usuarioTemPerfil('pastor', 'admin')) {
+                document.getElementById('view-lista').style.display = 'none';
+                document.getElementById('estudos-acesso-negado').style.display = 'block';
+                return;
+            }
+
+            quill = new Quill('#estudo-editor', {
+                theme: 'snow',
+                placeholder: 'Escreva o conteúdo do estudo/pregação...',
+                modules: {
+                    toolbar: [
+                        [{ header: [2, 3, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['blockquote', 'link'],
+                        ['clean']
+                    ]
+                }
+            });
+
+            document.getElementById('btn-novo-estudo').addEventListener('click', abrirNovoEstudo);
+            document.getElementById('btn-voltar-lista').addEventListener('click', mostrarLista);
+            document.getElementById('btn-cancelar-estudo').addEventListener('click', mostrarLista);
+            document.getElementById('btn-salvar-estudo').addEventListener('click', salvarEstudo);
+
+            await carregarEstudos();
+        });
+
+        async function carregarEstudos() {
+            try {
+                estudos = await fetchAPI('estudos');
+                renderizarTabela();
+            } catch (error) {
+                console.error('Erro ao carregar estudos:', error);
+                alert('Ocorreu um erro ao carregar os estudos e pregações.');
+            }
+        }
+
+        function renderizarTabela() {
+            const tbody = document.getElementById('tabela-estudos');
+            tbody.innerHTML = '';
+
+            if (estudos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Nenhum estudo ou pregação cadastrado ainda.</td></tr>';
+                return;
+            }
+
+            const ordenados = [...estudos].sort((a, b) => new Date(b.dataPublicacao) - new Date(a.dataPublicacao));
+
+            ordenados.forEach(e => {
+                const tr = document.createElement('tr');
+                const badgeTipo = e.tipo === 'pregacao' ? 'Pregação' : 'Estudo';
+                const badgeStatus = e.publicado
+                    ? '<span class="badge bg-success">Publicado</span>'
+                    : '<span class="badge bg-secondary">Rascunho</span>';
+
+                tr.innerHTML = `
+                    <td>${escapeHtml(e.titulo)}</td>
+                    <td><span class="badge bg-info text-dark">${badgeTipo}</span></td>
+                    <td>${e.autorNome ? escapeHtml(e.autorNome) : '—'}</td>
+                    <td>${formatarData(e.dataPublicacao)}</td>
+                    <td>${badgeStatus}</td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-success btn-editar-estudo" data-id="${e.id}"><i class="fas fa-edit"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-excluir-estudo" data-id="${e.id}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll('.btn-editar-estudo').forEach(btn => {
+                btn.addEventListener('click', () => abrirEditarEstudo(btn.dataset.id));
+            });
+            document.querySelectorAll('.btn-excluir-estudo').forEach(btn => {
+                btn.addEventListener('click', () => excluirEstudo(btn.dataset.id));
+            });
+        }
+
+        function mostrarLista() {
+            document.getElementById('view-editor').style.display = 'none';
+            document.getElementById('view-lista').style.display = 'block';
+        }
+
+        function mostrarEditor() {
+            document.getElementById('view-lista').style.display = 'none';
+            document.getElementById('view-editor').style.display = 'block';
+        }
+
+        function limparFormulario() {
+            document.getElementById('form-estudo').reset();
+            document.getElementById('estudo-id').value = '';
+            document.getElementById('estudo-tipo').value = 'estudo';
+            document.getElementById('estudo-publicado').checked = false;
+            document.getElementById('estudo-data').valueAsDate = new Date();
+            quill.setContents([]);
+        }
+
+        function abrirNovoEstudo() {
+            limparFormulario();
+            document.getElementById('editor-titulo-pagina').textContent = 'Novo Estudo/Pregação';
+            mostrarEditor();
+        }
+
+        async function abrirEditarEstudo(id) {
+            try {
+                const estudo = await fetchAPI(`estudos/${id}`);
+                if (!estudo) return;
+
+                document.getElementById('estudo-id').value = estudo.id;
+                document.getElementById('estudo-titulo').value = estudo.titulo;
+                document.getElementById('estudo-tipo').value = estudo.tipo;
+                document.getElementById('estudo-tema').value = estudo.tema || '';
+                document.getElementById('estudo-texto-base').value = estudo.textoBase || '';
+                document.getElementById('estudo-resumo').value = estudo.resumo || '';
+                document.getElementById('estudo-data').value = estudo.dataPublicacao;
+                document.getElementById('estudo-publicado').checked = !!estudo.publicado;
+                quill.root.innerHTML = estudo.conteudoHtml || '';
+
+                document.getElementById('editor-titulo-pagina').textContent = 'Editar Estudo/Pregação';
+                mostrarEditor();
+            } catch (error) {
+                console.error('Erro ao carregar estudo:', error);
+                alert('Ocorreu um erro ao carregar o estudo.');
+            }
+        }
+
+        async function salvarEstudo() {
+            const form = document.getElementById('form-estudo');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+
+            const id = document.getElementById('estudo-id').value;
+            const payload = {
+                titulo: document.getElementById('estudo-titulo').value,
+                tipo: document.getElementById('estudo-tipo').value,
+                tema: document.getElementById('estudo-tema').value || null,
+                textoBase: document.getElementById('estudo-texto-base').value || null,
+                resumo: document.getElementById('estudo-resumo').value || null,
+                conteudoHtml: quill.root.innerHTML,
+                dataPublicacao: document.getElementById('estudo-data').value,
+                publicado: document.getElementById('estudo-publicado').checked
+            };
+
+            try {
+                if (id) {
+                    await fetchAPI(`estudos/${id}`, 'PUT', payload);
+                } else {
+                    await fetchAPI('estudos', 'POST', payload);
+                }
+                await carregarEstudos();
+                mostrarLista();
+            } catch (error) {
+                console.error('Erro ao salvar estudo:', error);
+                alert('Ocorreu um erro ao salvar o estudo. Por favor, tente novamente.');
+            }
+        }
+
+        async function excluirEstudo(id) {
+            if (!confirm('Tem certeza que deseja excluir este estudo/pregação? Esta ação não pode ser desfeita.')) return;
+            try {
+                await fetchAPI(`estudos/${id}`, 'DELETE');
+                await carregarEstudos();
+            } catch (error) {
+                console.error('Erro ao excluir estudo:', error);
+                alert('Ocorreu um erro ao excluir o estudo.');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,9 +1,9 @@
 /* Variáveis de Tema - Fácil personalização */
 :root {
   /* Cores principais */
-  --primary-color: #198754; /* Verde (era azul #0d6efd) */
-  --primary-color-dark: #157347; /* Verde escuro */
-  --primary-color-light: #d1e7dd; /* Verde claro */
+  --primary-color: #1b5e3f; /* Verde escuro IBNC */
+  --primary-color-dark: #144a31; /* Verde mais escuro */
+  --primary-color-light: #c8e6d5; /* Verde claro */
   --secondary-color: #6c757d;
   --background-color: #f8f9fa;
   --text-color: #212529;
@@ -18,8 +18,8 @@
   
   /* Configurações de logo */
   --logo-url: url('../images/logo.png');
-  --logo-width: 32px;
-  --logo-height: 32px;
+  --logo-width: 36px;
+  --logo-height: 36px;
   
   /* Espaçamentos */
   --navbar-height: 60px;
@@ -162,26 +162,101 @@ body {
     margin-left: 0;
   }
   
-  /* Botão de toggle para sidebar mobile */
+  /* Botão de toggle para sidebar mobile — dentro do navbar */
   .sidebar-toggle {
-    display: block;
+    display: block !important;
     position: fixed;
-    top: var(--navbar-height);
-    left: 0;
-    z-index: 1001;
-    padding: 10px;
+    top: 12px;
+    left: 10px;
+    z-index: 1100;
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    font-size: 1.2rem;
+    cursor: pointer;
   }
-  
-  /* Ajuste para o botão de toggle da navbar */
+
+  /* Esconder o toggler do Bootstrap no mobile — apenas 1 hamburger */
   .navbar-toggler {
-    margin-left: auto;
+    display: none !important;
   }
-  
+
+  /* Garantir o dropdown do usuário sempre visível no mobile */
+  .navbar-collapse {
+    display: flex !important;
+  }
+  .navbar-collapse .navbar-nav {
+    flex-direction: row;
+  }
+
+  /* Impede que a navbar quebre para 2 linhas no mobile: se o nome do
+     usuário não coubesse ao lado do logo, o navbar-collapse ia parar
+     numa segunda linha e a altura real passava a divergir de
+     --navbar-height, cobrindo o início do conteúdo (fixed-top). */
+  .navbar > .container-fluid {
+    flex-wrap: nowrap;
+  }
+
+  /* No mobile mostra só o ícone do usuário (sem o nome), pra sempre
+     caber numa linha só ao lado do logo. */
+  .navbar .nome-usuario {
+    display: none;
+  }
+
   /* Ajuste para dropdown de usuário em mobile */
   .navbar .dropdown-menu {
     position: absolute;
     right: 0;
     left: auto;
+  }
+
+  /* Espaço para o botão hamburger na navbar */
+  .navbar-brand {
+    margin-left: 40px;
+    font-size: 0.9rem;
+    max-width: calc(100vw - 130px);
+    min-width: 0; /* deixa o filho .navbar-brand-text encolher abaixo do conteúdo dele */
+  }
+
+  /* A logo nunca pode encolher — sem isso ela disputava espaço com o
+     texto (flex-shrink padrão) e sumia. */
+  .navbar-logo {
+    flex-shrink: 0;
+  }
+
+  /* Reticências (…) aplicadas só no texto, nunca na logo ao lado.
+     text-overflow não funciona de forma confiável quando aplicado
+     direto num container flex com múltiplos filhos. */
+  .navbar-brand-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  /* Overlay quando sidebar está aberta */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+  }
+  .sidebar-overlay.show {
+    display: block;
+  }
+}
+
+/* Desktop: esconder o botão de toggle (sidebar sempre visível) */
+@media (min-width: 769px) {
+  .sidebar-toggle {
+    display: none !important;
+  }
+  .sidebar-overlay {
+    display: none !important;
   }
 }
 

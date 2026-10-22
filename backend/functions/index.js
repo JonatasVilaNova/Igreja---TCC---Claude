@@ -1,62 +1,62 @@
-// Arquivo principal para inicializar as rotas das Cloud Functions
+/**
+ * index.js — Ponto de entrada da API (Express + Firebase Functions)
+ * Conecta ao Supabase (PostgreSQL) via módulos de rotas.
+ */
 const express = require('express');
 const cors = require('cors');
-const ministeriosRoutes = require('./ministerios');
-const membrosRoutes = require('./membros');
-const escalasRoutes = require('./escalas');
-const conteudosRoutes = require('./conteudos');
-const authRoutes = require('./auth');
+const functions = require('firebase-functions');
+require('dotenv').config();
 
-// Inicializar o app Express
 const app = express();
 
-// Middleware para parsing de JSON e CORS
+// Middleware
+app.use(cors({ origin: true })); // TODO: restringir em produção
 app.use(express.json());
-app.use(cors({ origin: true }));
 
 // Rotas
-app.use('/api/ministerios', ministeriosRoutes);
-app.use('/api/membros', membrosRoutes);
-app.use('/api/escalas', escalasRoutes);
-app.use('/api/conteudos', conteudosRoutes);
-app.use('/api/auth', authRoutes);
+const authRoutes          = require('./auth');
+const ministeriosRoutes   = require('./ministerios');
+const membrosRoutes       = require('./membros');
+const escalasRoutes       = require('./escalas');
+const conteudosRoutes     = require('./conteudos');
+const plataformasRoutes   = require('./plataformas');
+const ordensCultoRoutes   = require('./ordens-culto');
+const codigosConviteRoutes = require('./codigos-convite');
+const tesourariaRoutes    = require('./tesouraria');
+const estudosRoutes       = require('./estudos');
 
-// Rota de teste/saúde
+app.use('/api/auth',            authRoutes);
+app.use('/api/ministerios',     ministeriosRoutes);
+app.use('/api/membros',         membrosRoutes);
+app.use('/api/escalas',         escalasRoutes);
+app.use('/api/conteudos',       conteudosRoutes);
+app.use('/api/plataformas',     plataformasRoutes);
+app.use('/api/ordens-culto',    ordensCultoRoutes);
+app.use('/api/codigos-convite', codigosConviteRoutes);
+app.use('/api/tesouraria',      tesourariaRoutes);
+app.use('/api/estudos',         estudosRoutes);
+
+// ── Aliases de compatibilidade ──────────────────────────────
+// O frontend chama fetchAPI('usuarios') → /api/usuarios
+// As rotas reais estão em authRoutes sob /usuarios, /usuarios/:id
+// Montamos authRoutes também em /api para que /api/usuarios funcione.
+app.use('/api', authRoutes);
+
+// Health check
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'API está funcionando!' });
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Middleware para tratamento de erros
-app.use((err, req, res, next) => {
-  console.error('Erro na aplicação:', err);
-  res.status(500).json({
-    error: 'Erro interno do servidor',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Ocorreu um erro ao processar sua solicitação'
-  });
-});
+// Exportar como Firebase Cloud Function (Gen 1 — acesso público)
+exports.api = functions
+    .region('us-central1')
+    .runWith({ invoker: 'public' })
+    .https.onRequest(app);
 
-// Middleware para rotas não encontradas
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Não encontrado',
-    message: 'A rota solicitada não existe'
-  });
-});
-
-// Exportar o app como uma Cloud Function (Firebase)
-try {
-  const functions = require('firebase-functions');
-  exports.api = functions.https.onRequest(app);
-} catch (e) {
-  // se firebase-functions não estiver disponível (por exemplo, em execução direta), continuar
-  console.warn('firebase-functions não disponível, exportando app diretamente para desenvolvimento.');
-  exports.api = app;
-}
-
-// Para desenvolvimento local: manter a habilidade de rodar `node index.js`
-if (process.env.NODE_ENV === 'development') {
-  const PORT = process.env.PORT || 8080;
-  app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-  });
+// Executar localmente (quando não estiver no Firebase)
+if (process.env.NODE_ENV !== 'production' && !process.env.FIREBASE_CONFIG) {
+    const PORT = process.env.PORT || 8080;
+    app.listen(PORT, () => {
+        console.log(`🚀 API rodando em http://localhost:${PORT}`);
+    });
 }

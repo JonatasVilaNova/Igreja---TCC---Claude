@@ -1,233 +1,134 @@
-// Rotas para gestão de ministérios
+/**
+ * ministerios.js — CRUD de Ministérios
+ * Usa Supabase como banco de dados.
+ */
 const express = require('express');
 const router = express.Router();
-const db = require('../utils/db');
 const { verificarToken, verificarPermissao } = require('./auth');
+const { getClient } = require('./utils/db');
 
-// Listar todos os ministérios
+// GET /api/ministerios — listar todos
 router.get('/', verificarToken, async (req, res) => {
-  try {
-    const query = `
-      SELECT id, nome, descricao, idLider
-      FROM Ministerios
-      ORDER BY nome
-    `;
-    
-    const ministerios = await db.executeQuery(query);
-    res.status(200).json(ministerios);
-  } catch (error) {
-    console.error('Erro ao listar ministérios:', error);
-    res.status(500).json({ error: 'Erro ao listar ministérios.' });
-  }
+    try {
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('ministerios')
+            .select('*, lider:usuarios!ministerios_id_lider_fkey(id, nome, email)')
+            .order('nome');
+
+        if (error) throw error;
+
+        const result = data.map(m => ({
+            id: m.id,
+            nome: m.nome,
+            descricao: m.descricao,
+            idLider: m.id_lider,
+            lider: m.lider ? m.lider.nome : null,
+            created_at: m.created_at
+        }));
+
+        res.json(result);
+    } catch (err) {
+        console.error('Erro ao listar ministérios:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
 });
 
-// Obter um ministério específico
+// GET /api/ministerios/:id
 router.get('/:id', verificarToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const query = `
-      SELECT id, nome, descricao, idLider
-      FROM Ministerios
-      WHERE id = @param0
-    `;
-    
-    const ministerios = await db.executeQuery(query, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (ministerios.length === 0) {
-      return res.status(404).json({ error: 'Ministério não encontrado.' });
+    try {
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('ministerios')
+            .select('*, lider:usuarios!ministerios_id_lider_fkey(id, nome, email)')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error) throw error;
+        if (!data) return res.status(404).json({ error: 'Ministério não encontrado' });
+
+        res.json({
+            id: data.id,
+            nome: data.nome,
+            descricao: data.descricao,
+            idLider: data.id_lider,
+            lider: data.lider ? data.lider.nome : null
+        });
+    } catch (err) {
+        console.error('Erro ao obter ministério:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    res.status(200).json(ministerios[0]);
-  } catch (error) {
-    console.error('Erro ao obter ministério:', error);
-    res.status(500).json({ error: 'Erro ao obter ministério.' });
-  }
 });
 
-// Criar um novo ministério (apenas para admin ou pastor)
-router.post('/', verificarToken, verificarPermissao('admin'), async (req, res) => {
-  try {
-    const { nome, descricao, idLider } = req.body;
-    
-    if (!nome || !descricao) {
-      return res.status(400).json({ error: 'Nome e descrição são obrigatórios.' });
-    }
-    
-    // Verificar se o líder existe (se fornecido)
-    if (idLider) {
-      const queryVerificarLider = `
-        SELECT COUNT(*) as count
-        FROM Usuarios
-        WHERE id = @param0
-      `;
-      
-      const resultadoLider = await db.executeQuery(queryVerificarLider, [
-        { placeholder: '@param0', value: idLider }
-      ]);
-      
-      if (resultadoLider[0].count === 0) {
-        return res.status(400).json({ error: 'Líder não encontrado.' });
-      }
-    }
-    
-    // Inserir novo ministério
-    const queryInserir = `
-      INSERT INTO Ministerios (nome, descricao, idLider)
-      VALUES (@param0, @param1, @param2);
-      SELECT SCOPE_IDENTITY() as id;
-    `;
-    
-    const resultadoInsercao = await db.executeQuery(queryInserir, [
-      { placeholder: '@param0', value: nome },
-      { placeholder: '@param1', value: descricao },
-      { placeholder: '@param2', value: idLider || null }
-    ]);
-    
-    const id = resultadoInsercao[0].id;
-    
-    res.status(201).json({
-      id,
-      nome,
-      descricao,
-      idLider: idLider || null
-    });
-  } catch (error) {
-    console.error('Erro ao criar ministério:', error);
-    res.status(500).json({ error: 'Erro ao criar ministério.' });
-  }
-});
-
-// Atualizar um ministério (apenas para admin ou pastor)
-router.put('/:id', verificarToken, verificarPermissao('admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { nome, descricao, idLider } = req.body;
-    
-    // Verificar se o ministério existe
-    const queryVerificar = `
-      SELECT *
-      FROM Ministerios
-      WHERE id = @param0
-    `;
-    
-    const ministerios = await db.executeQuery(queryVerificar, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (ministerios.length === 0) {
-      return res.status(404).json({ error: 'Ministério não encontrado.' });
-    }
-    
-    // Verificar se o líder existe (se fornecido)
-    if (idLider) {
-      const queryVerificarLider = `
-        SELECT COUNT(*) as count
-        FROM Usuarios
-        WHERE id = @param0
-      `;
-      
-      const resultadoLider = await db.executeQuery(queryVerificarLider, [
-        { placeholder: '@param0', value: idLider }
-      ]);
-      
-      if (resultadoLider[0].count === 0) {
-        return res.status(400).json({ error: 'Líder não encontrado.' });
-      }
-    }
-    
-    // Atualizar ministério
-    const queryAtualizar = `
-      UPDATE Ministerios
-      SET nome = @param0, descricao = @param1, idLider = @param2
-      WHERE id = @param3
-    `;
-    
-    await db.executeQuery(queryAtualizar, [
-      { placeholder: '@param0', value: nome || ministerios[0].nome },
-      { placeholder: '@param1', value: descricao || ministerios[0].descricao },
-      { placeholder: '@param2', value: idLider !== undefined ? idLider : ministerios[0].idLider },
-      { placeholder: '@param3', value: parseInt(id) }
-    ]);
-    
-    // Obter ministério atualizado
-    const queryObterAtualizado = `
-      SELECT id, nome, descricao, idLider
-      FROM Ministerios
-      WHERE id = @param0
-    `;
-    
-    const ministeriosAtualizados = await db.executeQuery(queryObterAtualizado, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    res.status(200).json(ministeriosAtualizados[0]);
-  } catch (error) {
-    console.error('Erro ao atualizar ministério:', error);
-    res.status(500).json({ error: 'Erro ao atualizar ministério.' });
-  }
-});
-
-// Excluir um ministério (apenas para admin ou pastor)
-router.delete('/:id', verificarToken, verificarPermissao('admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Verificar se o ministério existe
-    const queryVerificar = `
-      SELECT *
-      FROM Ministerios
-      WHERE id = @param0
-    `;
-    
-    const ministerios = await db.executeQuery(queryVerificar, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (ministerios.length === 0) {
-      return res.status(404).json({ error: 'Ministério não encontrado.' });
-    }
-    
-    // Verificar se existem membros, escalas ou conteúdos associados
-    const queryVerificarDependencias = `
-      SELECT 
-        (SELECT COUNT(*) FROM MembrosMinisterio WHERE idMinisterio = @param0) as membros,
-        (SELECT COUNT(*) FROM Escalas WHERE idMinisterio = @param0) as escalas,
-        (SELECT COUNT(*) FROM Conteudos WHERE idMinisterio = @param0) as conteudos
-    `;
-    
-    const dependencias = await db.executeQuery(queryVerificarDependencias, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (dependencias[0].membros > 0 || dependencias[0].escalas > 0 || dependencias[0].conteudos > 0) {
-      return res.status(400).json({ 
-        error: 'Não é possível excluir este ministério pois existem membros, escalas ou conteúdos associados a ele.',
-        dependencias: {
-          membros: dependencias[0].membros,
-          escalas: dependencias[0].escalas,
-          conteudos: dependencias[0].conteudos
+// POST /api/ministerios — criar (Admin+)
+router.post('/', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const { nome, descricao, idLider } = req.body;
+        if (!nome || !descricao) {
+            return res.status(400).json({ error: 'Nome e descrição são obrigatórios' });
         }
-      });
+
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('ministerios')
+            .insert({ nome, descricao, id_lider: idLider || null })
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.status(201).json({
+            id: data.id,
+            nome: data.nome,
+            descricao: data.descricao,
+            idLider: data.id_lider
+        });
+    } catch (err) {
+        console.error('Erro ao criar ministério:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    // Excluir o ministério
-    const queryExcluir = `
-      DELETE FROM Ministerios
-      WHERE id = @param0
-    `;
-    
-    await db.executeQuery(queryExcluir, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    res.status(200).json({ message: 'Ministério excluído com sucesso.' });
-  } catch (error) {
-    console.error('Erro ao excluir ministério:', error);
-    res.status(500).json({ error: 'Erro ao excluir ministério.' });
-  }
+});
+
+// PUT /api/ministerios/:id — atualizar (Admin+)
+router.put('/:id', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const { nome, descricao, idLider } = req.body;
+        const updateData = {};
+        if (nome) updateData.nome = nome;
+        if (descricao) updateData.descricao = descricao;
+        if (idLider !== undefined) updateData.id_lider = idLider;
+
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('ministerios')
+            .update(updateData)
+            .eq('id', req.params.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({
+            id: data.id,
+            nome: data.nome,
+            descricao: data.descricao,
+            idLider: data.id_lider
+        });
+    } catch (err) {
+        console.error('Erro ao atualizar ministério:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// DELETE /api/ministerios/:id — excluir (Pastor)
+router.delete('/:id', verificarToken, verificarPermissao('pastor'), async (req, res) => {
+    try {
+        const supabase = getClient();
+        const { error } = await supabase.from('ministerios').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ message: 'Ministério excluído com sucesso' });
+    } catch (err) {
+        console.error('Erro ao excluir ministério:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
 });
 
 module.exports = router;

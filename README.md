@@ -2,47 +2,61 @@
 
 ## Visão Geral
 
-O Sistema de Gestão de Igrejas é uma aplicação web completa para gerenciar ministérios, escalas, membros e conteúdos de uma igreja. Desenvolvido com HTML5 + Bootstrap 5 + JavaScript puro, funciona diretamente no navegador sem necessidade de configurar banco de dados (modo mock).
+Aplicação web completa para administração de igrejas: ministérios, escalas, membros, conteúdos e integrações externas (YouTube, Bíblia, Holyrics, Google Drive). Desenvolvida com HTML5 + Bootstrap 5 + JavaScript puro.
 
-## Funcionalidades Principais
+Atualmente funciona 100% no **modo mock** (sem backend) — basta abrir `frontend/pages/login.html` no navegador.
 
-- **Gestão de Ministérios**: Cadastro, edição e exclusão de ministérios da igreja
-- **Gestão de Membros**: Cadastro de membros em ministérios com funções específicas
-- **Escalas de Serviço**: Criação e gerenciamento de escalas, com detalhes de conteúdos e instrumentos
-- **Conteúdos Personalizados**: Compartilhamento de arquivos, músicas e links por escala
-- **Gestão de Usuários**: Controle de acesso com diferentes níveis de permissão (apenas Pastor)
-- **Visualização de Conflitos**: Identificação automática de membros escalados em múltiplos ministérios
-- **Bíblia Online**: Leitura por livro/capítulo e pesquisa de versículos — integração com bible-api.com
-- **Canal do YouTube**: Listagem de vídeos e player integrado
-- **Transmissão ao Vivo**: Embed do live stream do canal YouTube da igreja
-- **Ordem de Culto**: Editor drag-and-drop para organizar os momentos do culto
-- **Plataformas de Música**: Cadastro de links para Cifra Club, YouTube, Spotify, etc.
-- **Upload de Arquivos**: Simulação de repositório de arquivos (Google Drive na versão real)
-- **Apresentação (Holyrics)**: Integração com o software de apresentação via IP local
+## Funcionalidades
+
+### Gestão (Pastor e Admin)
+- **Ministérios** — CRUD completo com atribuição de líderes
+- **Escalas** — Criação e gerenciamento de escalas com detecção de conflitos
+- **Conteúdos** — Biblioteca de músicas, arquivos e links por ministério
+- **Plataformas** — Links para Cifra Club, YouTube, Spotify etc.
+- **Upload** — Repositório de arquivos (Google Drive em produção)
+- **Gestão de Usuários** — Exclusivo do Pastor: criação, edição, convites
+
+### Integrações (todos os perfis)
+- **Bíblia Online** — Leitura por livro/capítulo via [bible-api.com](https://bible-api.com) (Almeida, KJV, WEB)
+- **Canal do YouTube** — Player e listagem de vídeos
+- **Transmissão ao Vivo** — Embed do live stream
+- **Ordem de Culto** — Editor drag-and-drop (SortableJS)
+- **Apresentação (Holyrics)** — Visualização em tempo real via rede local
 
 ## Perfis de Acesso
 
-| Perfil | Código interno | Acesso |
-|--------|---------------|--------|
+| Perfil | Código | Acesso |
+|--------|--------|--------|
 | **Pastor** | `pastor` | Completo — inclui gestão de usuários |
 | **Admin (Líder)** | `admin` | Gestão de ministérios, escalas e conteúdos |
 | **Membro** | `padrao` | Visualização das próprias escalas e conteúdos |
 
-## Configuração e Personalização
+## Como Executar (Modo Mock)
 
-### Arquivo central de configuração
+1. Abra `frontend/pages/login.html` no navegador
+2. Use um dos usuários de teste:
 
-Toda a personalização do sistema está em **`frontend/js/config.js`**. Edite apenas esse arquivo:
+| Email | Senha | Perfil |
+|-------|-------|--------|
+| pastor@igreja.com | pastor123 | Pastor |
+| lider@igreja.com | lider123 | Admin (Líder) |
+| membro@igreja.com | membro123 | Membro |
+
+> Novos usuários podem se registrar usando um código de convite gerado pelo Pastor.
+
+## Configuração
+
+Toda a personalização está em **`frontend/js/config.js`**:
 
 ```js
 window.IGREJA_CONFIG = {
     USE_MOCK: true,                    // false para usar API real
     API_BASE: '',                      // URL do backend em produção
-    NOME_IGREJA: 'Nome da Sua Igreja',
+    NOME_IGREJA: 'Igreja Batista de Nova Cintra',
     YOUTUBE_CHANNEL_ID: 'UCseuCanal',
     YOUTUBE_CHANNEL_URL: 'https://youtube.com/...',
     YOUTUBE_LIVE_URL: 'https://youtube.com/.../live',
-    PROXIMA_TRANSMISSAO: 'Domingo, 01/06/2025 às 10:00',
+    PROXIMA_TRANSMISSAO: 'Domingo às 10:00',
     BIBLIA_TRADUCAO_PADRAO: 'almeida', // almeida | kjv | web
     GOOGLE_DRIVE_FOLDER_URL: '',
     HOLYRICS_HOST: '',
@@ -51,42 +65,56 @@ window.IGREJA_CONFIG = {
 };
 ```
 
-### Alterando as cores
+### Personalização Visual
 
-1. Abra `/frontend/css/styles.css`
-2. Localize a seção `:root` no início do arquivo
-3. Modifique as variáveis de cor:
-   ```css
-   :root {
-     --primary-color: #28a745;
-     --primary-color-dark: #218838;
-     --primary-color-light: #48c774;
-   }
-   ```
+**Cores** — Edite as variáveis CSS em `frontend/css/styles.css`:
+```css
+:root {
+  --primary-color: #28a745;
+  --primary-color-dark: #218838;
+  --primary-color-light: #48c774;
+}
+```
 
-### Alterando a logo
+**Logo** — Defina `LOGO_URL` em `config.js` ou substitua `frontend/images/logo.png`.
 
-Defina `LOGO_URL` em `config.js` apontando para o arquivo de imagem da sua igreja.
-Alternativamente, substitua `/frontend/images/logo.png` pela logo desejada.
+## Estrutura do Projeto
 
-## Usuários para Teste (modo mock)
+```
+├── frontend/
+│   ├── pages/          # 18 páginas HTML
+│   ├── js/
+│   │   ├── config.js   # Configuração central
+│   │   ├── app.js      # Lógica principal + mock data
+│   │   └── sidebar-loader.js
+│   ├── css/styles.css
+│   ├── components/     # navbar.html, sidebar.html
+│   └── images/
+├── backend/
+│   ├── functions/      # Express API (auth, ministérios, escalas, etc.)
+│   ├── utils/db.js     # Conexão com banco de dados
+│   └── scripts/        # Migrations e seed
+├── database/
+│   ├── schema.sql      # DDL — estrutura das tabelas
+│   └── seed.sql        # DML — dados iniciais
+└── firebase.json       # Configuração Firebase Hosting
+```
 
-| Email | Senha | Perfil |
-|-------|-------|--------|
-| pastor@igreja.com | pastor123 | Pastor |
-| lider@igreja.com | lider123 | Admin (Líder) |
-| membro@igreja.com | membro123 | Membro |
+## Stack Tecnológica
 
-## Publicação em Produção
+| Camada | Tecnologia |
+|--------|-----------|
+| **Frontend** | HTML5, CSS3, JavaScript, Bootstrap 5, Font Awesome |
+| **Backend** | Node.js, Express, JWT, bcrypt |
+| **Banco de dados** | Schema SQL preparado (ainda não conectado em produção) |
+| **Hosting** | Firebase Hosting (configurado) |
+| **Libs externas** | SortableJS (ordem de culto), YouTube IFrame API |
 
-1. Edite `frontend/js/config.js`: mude `USE_MOCK: false` e preencha `API_BASE` e as demais chaves
-2. Configure o backend: `cd backend/functions && npm install`, preencha `.env` (copie `.env.example`)
-3. Execute `firebase deploy --only hosting,functions`
+## Requisitos
 
-Consulte o **Checklist de Deploy** em `todo.md` para os passos detalhados.
+- **Localmente (mock):** qualquer navegador moderno
+- **Produção:** Node.js 18+, Firebase CLI, banco de dados SQL
 
-## Requisitos Técnicos
+## Licença
 
-- Navegador moderno (Chrome, Firefox, Edge, Safari)
-- Para rodar localmente: basta abrir `frontend/pages/login.html` no navegador (modo mock)
-- Para produção: Node.js 18+, Firebase CLI, acesso ao Azure SQL
+Projeto acadêmico (TCC).

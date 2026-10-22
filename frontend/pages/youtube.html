@@ -7,7 +7,7 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
     <!-- Estilos Personalizados -->
     <link rel="stylesheet" href="../css/styles.css">
 </head>
@@ -54,7 +54,7 @@
                             <p class="text-muted mb-0" id="yt-nome-igreja">Igreja Batista de Nova Cintra</p>
                         </div>
                         <div class="col-md-6 text-md-end">
-                            <a href="https://www.youtube.com/c/IgrejaBatistadeNovaCintra" target="_blank" class="btn btn-danger" id="btn-abrir-canal">
+                            <a href="https://www.youtube.com/@ibnovacintra" target="_blank" class="btn btn-danger" id="btn-abrir-canal">
                                 <i class="fab fa-youtube me-2"></i>Abrir no YouTube
                             </a>
                         </div>
@@ -134,11 +134,10 @@
         
         // Função para inicializar o player do YouTube
         function onYouTubeIframeAPIReady() {
-            // Inicializar player com vídeo de placeholder
+            // Inicializar player vazio — será preenchido com o primeiro vídeo real
             player = new YT.Player('youtube-player', {
                 height: '500',
                 width: '100%',
-                videoId: 'dQw4w9WgXcQ', // Placeholder, será substituído
                 playerVars: {
                     'playsinline': 1,
                     'rel': 0,
@@ -166,57 +165,35 @@
             document.getElementById('youtube-erro').style.display = 'none';
             
             try {
-                // Em uma implementação real, aqui seria feita uma chamada à API do YouTube
-                // Para esta demonstração, vamos simular uma resposta
+                // Tentar buscar vídeos reais do canal configurado
+                const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
                 
-                // Simular delay de rede
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                const response = await fetch(apiUrl);
+                const data = await response.json();
                 
-                // Simular resposta da API
-                listaVideos = [
-                    {
-                        id: 'dQw4w9WgXcQ',
-                        titulo: 'Culto de Domingo - 26/05/2025',
-                        descricao: 'Culto de celebração da Igreja Batista de Nova Cintra.',
-                        thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
-                        data: '26/05/2025'
-                    },
-                    {
-                        id: 'LACbVhgtx9I',
-                        titulo: 'Estudo Bíblico - O Livro de Tiago',
-                        descricao: 'Estudo bíblico semanal sobre o livro de Tiago.',
-                        thumbnail: 'https://img.youtube.com/vi/LACbVhgtx9I/mqdefault.jpg',
-                        data: '22/05/2025'
-                    },
-                    {
-                        id: '9bZkp7q19f0',
-                        titulo: 'Culto de Louvor e Adoração',
-                        descricao: 'Momento especial de louvor e adoração.',
-                        thumbnail: 'https://img.youtube.com/vi/9bZkp7q19f0/mqdefault.jpg',
-                        data: '19/05/2025'
-                    },
-                    {
-                        id: 'JGwWNGJdvx8',
-                        titulo: 'Encontro de Jovens - Maio 2025',
-                        descricao: 'Encontro mensal dos jovens da igreja.',
-                        thumbnail: 'https://img.youtube.com/vi/JGwWNGJdvx8/mqdefault.jpg',
-                        data: '15/05/2025'
-                    },
-                    {
-                        id: 'kJQP7kiw5Fk',
-                        titulo: 'Culto de Domingo - 12/05/2025',
-                        descricao: 'Culto de celebração da Igreja Batista de Nova Cintra.',
-                        thumbnail: 'https://img.youtube.com/vi/kJQP7kiw5Fk/mqdefault.jpg',
-                        data: '12/05/2025'
-                    },
-                    {
-                        id: 'RgKAFK5djSk',
-                        titulo: 'Escola Bíblica Dominical - Lição 19',
-                        descricao: 'Aula da Escola Bíblica Dominical sobre a lição 19.',
-                        thumbnail: 'https://img.youtube.com/vi/RgKAFK5djSk/mqdefault.jpg',
-                        data: '12/05/2025'
-                    }
-                ];
+                if (data.status === 'ok' && data.items && data.items.length > 0) {
+                    listaVideos = data.items.map(item => {
+                        // Extrair ID do vídeo do link (ex: https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+                        let vidId = '';
+                        if (item.link && item.link.includes('v=')) {
+                            vidId = item.link.split('v=')[1].split('&')[0];
+                        } else if (item.guid && item.guid.includes('yt:video:')) {
+                            vidId = item.guid.split('yt:video:')[1];
+                        }
+                        
+                        return {
+                            id: vidId || 'dQw4w9WgXcQ',
+                            titulo: item.title,
+                            descricao: '',
+                            thumbnail: item.thumbnail,
+                            data: new Date(item.pubDate).toLocaleDateString('pt-BR')
+                        };
+                    });
+                } else {
+                    // Fallback visual informando que não foi possível carregar os vídeos do canal real
+                    throw new Error('Nenhum vídeo publicado encontrado ou canal ID inválido');
+                }
                 
                 // Preencher lista de vídeos
                 const videosContainer = document.getElementById('youtube-videos');

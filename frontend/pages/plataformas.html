@@ -7,7 +7,7 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
     <!-- Estilos Personalizados -->
     <link rel="stylesheet" href="../css/styles.css">
 </head>
@@ -181,84 +181,18 @@
         let plataformaParaExcluir = null;
         
         document.addEventListener('DOMContentLoaded', function() {
-            // Verificar login
             const usuario = verificarLogin();
-            
             if (!usuario) return;
-            
-            // Verificar permissões (usar perfil normalizado)
-            const perfil = usuario.tipoPerfil || usuario.perfil || (window.usuarioAtual ? (window.usuarioAtual.tipoPerfil || window.usuarioAtual.perfil) : null);
-            if (perfil !== 'pastor' && perfil !== 'admin') {
-                window.location.href = 'dashboard.html';
-                return;
-            }
-            
-            // Configurar sidebar mobile
-            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
-            if (sidebarToggleBtn) {
-                sidebarToggleBtn.addEventListener('click', function() {
-                    document.querySelector('.sidebar').classList.toggle('show');
-                });
-            }
             
             // Configurar eventos
             document.getElementById('btn-salvar-plataforma').addEventListener('click', salvarPlataforma);
             document.getElementById('btn-confirmar-exclusao').addEventListener('click', confirmarExclusaoPlataforma);
             
-            // Carregar plataformas
+            // Carregar plataformas via fetchAPI
             carregarPlataformas();
         });
-        
-        // Dados iniciais das plataformas (carregados uma única vez)
-        const plataformasIniciais = [
-            {
-                id: 1,
-                nome: 'Cifra Club',
-                url: 'https://www.cifraclub.com.br',
-                icone: 'fa-guitar',
-                cor: '#2D9CDB',
-                descricao: 'Plataforma de cifras e tablaturas para violão, guitarra, baixo, etc.',
-                ativo: true
-            },
-            {
-                id: 2,
-                nome: 'YouTube',
-                url: 'https://www.youtube.com',
-                icone: 'fa-youtube',
-                cor: '#FF0000',
-                descricao: 'Plataforma de vídeos com músicas, tutoriais e apresentações.',
-                ativo: true
-            },
-            {
-                id: 3,
-                nome: 'Spotify',
-                url: 'https://open.spotify.com',
-                icone: 'fa-spotify',
-                cor: '#1DB954',
-                descricao: 'Serviço de streaming de música com milhões de faixas.',
-                ativo: true
-            },
-            {
-                id: 4,
-                nome: 'Deezer',
-                url: 'https://www.deezer.com',
-                icone: 'fa-music',
-                cor: '#00C7F2',
-                descricao: 'Serviço de streaming de música com playlists e rádios.',
-                ativo: true
-            },
-            {
-                id: 5,
-                nome: 'Google Drive',
-                url: 'https://drive.google.com',
-                icone: 'fa-file-pdf',
-                cor: '#4285F4',
-                descricao: 'Armazenamento de arquivos para partituras e letras em PDF.',
-                ativo: true
-            }
-        ];
 
-        // Função para carregar plataformas (apenas na primeira vez)
+        // Carregar plataformas via fetchAPI
         async function carregarPlataformas() {
             document.getElementById('plataformas-loading').style.display = 'block';
             document.getElementById('plataformas-lista').style.display = 'none';
@@ -266,13 +200,7 @@
             document.getElementById('plataformas-erro').style.display = 'none';
 
             try {
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Inicializar array apenas se ainda vazio (não sobrescreve edições)
-                if (plataformas.length === 0) {
-                    plataformas = [...plataformasIniciais];
-                }
-
+                plataformas = await fetchAPI('plataformas');
                 document.getElementById('plataformas-loading').style.display = 'none';
                 renderizarPlataformas();
             } catch (error) {
@@ -282,7 +210,7 @@
             }
         }
 
-        // Função para renderizar a lista atual de plataformas (sem resetar os dados)
+        // Renderizar a lista de plataformas
         function renderizarPlataformas() {
             if (plataformas.length === 0) {
                 document.getElementById('plataformas-lista').style.display = 'none';
@@ -312,7 +240,7 @@
                             <a href="${plataforma.url}" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
                                 <i class="fas fa-external-link-alt me-1"></i> Visitar
                             </a>
-                            <div class="btn-group w-100" role="group">
+                            <div class="btn-group w-100 admin-only" role="group">
                                 <button type="button" class="btn btn-sm btn-outline-success editar-plataforma" data-id="${plataforma.id}">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -333,24 +261,22 @@
             });
 
             document.querySelectorAll('.editar-plataforma').forEach(btn => {
-                btn.addEventListener('click', () => abrirModalEditarPlataforma(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => abrirModalEditarPlataforma(btn.dataset.id));
             });
 
             document.querySelectorAll('.excluir-plataforma').forEach(btn => {
-                btn.addEventListener('click', () => abrirModalExcluirPlataforma(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => abrirModalExcluirPlataforma(btn.dataset.id));
             });
 
             document.getElementById('plataformas-lista').style.display = 'flex';
             document.getElementById('plataformas-vazio').style.display = 'none';
         }
         
-        // Função para abrir modal de edição
+        // Abrir modal de edição
         function abrirModalEditarPlataforma(id) {
-            const plataforma = plataformas.find(p => p.id === id);
-            
+            const plataforma = plataformas.find(p => String(p.id) === String(id));
             if (!plataforma) return;
             
-            // Preencher formulário
             document.getElementById('plataforma-id').value = plataforma.id;
             document.getElementById('plataforma-nome').value = plataforma.nome;
             document.getElementById('plataforma-url').value = plataforma.url;
@@ -358,92 +284,50 @@
             document.getElementById('plataforma-cor').value = plataforma.cor;
             document.getElementById('plataforma-descricao').value = plataforma.descricao || '';
             document.getElementById('plataforma-ativo').checked = plataforma.ativo;
-            
-            // Atualizar título do modal
             document.getElementById('modalPlataformaTitulo').textContent = 'Editar Plataforma';
             
-            // Abrir modal
             const modal = new bootstrap.Modal(document.getElementById('modalPlataforma'));
             modal.show();
         }
         
-        // Função para abrir modal de exclusão
+        // Abrir modal de exclusão
         function abrirModalExcluirPlataforma(id) {
             plataformaParaExcluir = id;
-            
-            // Abrir modal de confirmação
             const modal = new bootstrap.Modal(document.getElementById('modalConfirmacaoExclusao'));
             modal.show();
         }
         
-        // Função para salvar plataforma
+        // Salvar plataforma via fetchAPI
         async function salvarPlataforma() {
-            // Validar formulário
             const form = document.getElementById('form-plataforma');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
+            if (!form.checkValidity()) { form.reportValidity(); return; }
             
-            // Obter dados do formulário
             const id = document.getElementById('plataforma-id').value;
-            const nome = document.getElementById('plataforma-nome').value;
-            const url = document.getElementById('plataforma-url').value;
-            const icone = document.getElementById('plataforma-icone').value;
-            const cor = document.getElementById('plataforma-cor').value;
-            const descricao = document.getElementById('plataforma-descricao').value;
-            const ativo = document.getElementById('plataforma-ativo').checked;
+            const dados = {
+                nome: document.getElementById('plataforma-nome').value,
+                url: document.getElementById('plataforma-url').value,
+                icone: document.getElementById('plataforma-icone').value,
+                cor: document.getElementById('plataforma-cor').value,
+                descricao: document.getElementById('plataforma-descricao').value,
+                ativo: document.getElementById('plataforma-ativo').checked
+            };
             
             try {
-                // Em uma implementação real, aqui seria feita uma chamada à API
-                // Para esta demonstração, vamos simular uma resposta
-                
-                // Simular delay de rede
-                await new Promise(resolve => setTimeout(resolve, 800));
-                
                 if (id) {
-                    // Editar plataforma existente
-                    const index = plataformas.findIndex(p => p.id === parseInt(id));
-                    
-                    if (index !== -1) {
-                        plataformas[index] = {
-                            id: parseInt(id),
-                            nome,
-                            url,
-                            icone,
-                            cor,
-                            descricao,
-                            ativo
-                        };
-                    }
+                    await fetchAPI(`plataformas/${id}`, 'PUT', dados);
                 } else {
-                    // Criar nova plataforma
-                    const novaPlataforma = {
-                        id: plataformas.length > 0 ? Math.max(...plataformas.map(p => p.id)) + 1 : 1,
-                        nome,
-                        url,
-                        icone,
-                        cor,
-                        descricao,
-                        ativo
-                    };
-                    
-                    plataformas.push(novaPlataforma);
+                    await fetchAPI('plataformas', 'POST', dados);
                 }
                 
-                // Fechar modal
+                // Fechar modal e limpar
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalPlataforma'));
                 modal.hide();
-
-                // Limpar formulário
                 document.getElementById('form-plataforma').reset();
                 document.getElementById('plataforma-id').value = '';
                 document.getElementById('modalPlataformaTitulo').textContent = 'Nova Plataforma';
 
-                // Re-renderizar lista sem resetar dados
-                renderizarPlataformas();
-
-                // Mostrar mensagem de sucesso
+                // Recarregar lista
+                await carregarPlataformas();
                 alert(id ? 'Plataforma atualizada com sucesso!' : 'Plataforma criada com sucesso!');
             } catch (error) {
                 console.error('Erro ao salvar plataforma:', error);
@@ -451,31 +335,18 @@
             }
         }
         
-        // Função para confirmar exclusão
+        // Confirmar exclusão via fetchAPI
         async function confirmarExclusaoPlataforma() {
             if (!plataformaParaExcluir) return;
             
             try {
-                // Em uma implementação real, aqui seria feita uma chamada à API
-                // Para esta demonstração, vamos simular uma resposta
+                await fetchAPI(`plataformas/${plataformaParaExcluir}`, 'DELETE');
                 
-                // Simular delay de rede
-                await new Promise(resolve => setTimeout(resolve, 800));
-                
-                // Remover plataforma da lista
-                plataformas = plataformas.filter(p => p.id !== plataformaParaExcluir);
-                
-                // Fechar modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExclusao'));
                 modal.hide();
-                
-                // Limpar plataforma para exclusão
                 plataformaParaExcluir = null;
 
-                // Re-renderizar lista sem resetar dados
-                renderizarPlataformas();
-                
-                // Mostrar mensagem de sucesso
+                await carregarPlataformas();
                 alert('Plataforma excluída com sucesso!');
             } catch (error) {
                 console.error('Erro ao excluir plataforma:', error);

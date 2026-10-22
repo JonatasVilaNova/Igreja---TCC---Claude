@@ -7,7 +7,7 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
     <!-- Estilos Personalizados -->
     <link rel="stylesheet" href="../css/styles.css">
 </head>
@@ -289,26 +289,13 @@
             
             try {
                 // Carregar dados
-                usuarios = await fetchAPI('usuarios');
-                ministerios = await fetchAPI('ministerios');
-                membrosMinisterio = await fetchAPI('membros');
-                escalas = await fetchAPI('escalas');
+                try { usuarios = await fetchAPI('usuarios'); } catch(e) { console.warn('Não foi possível carregar usuarios:', e); }
+                try { ministerios = await fetchAPI('ministerios'); } catch(e) { console.warn('Não foi possível carregar ministerios:', e); }
+                try { membrosMinisterio = await fetchAPI('membros'); } catch(e) { console.warn('Não foi possível carregar membros:', e); }
+                try { escalas = await fetchAPI('escalas'); } catch(e) { console.warn('Não foi possível carregar escalas:', e); }
                 
-                // Mock para códigos de convite (em um sistema real, viria do backend)
-                codigosConvite = [
-                    { 
-                        codigo: 'IGREJA2025', 
-                        perfil: 'padrao', 
-                        dataExpiracao: '2025-12-31', 
-                        usosRestantes: 50 
-                    },
-                    { 
-                        codigo: 'LIDER2025', 
-                        perfil: 'admin', 
-                        dataExpiracao: '2025-06-30', 
-                        usosRestantes: 5 
-                    }
-                ];
+                // Carregar códigos de convite do backend
+                try { codigosConvite = await fetchAPI('codigos-convite'); } catch(e) { console.warn('Não foi possível carregar códigos:', e); codigosConvite = []; }
                 
                 // Configurar eventos
                 document.getElementById('btn-salvar-usuario').addEventListener('click', salvarUsuario);
@@ -378,8 +365,8 @@
                 const row = document.createElement('tr');
                 
                 row.innerHTML = `
-                    <td>${usuario.nome}</td>
-                    <td>${usuario.email}</td>
+                    <td>${escapeHtml(usuario.nome)}</td>
+                    <td>${escapeHtml(usuario.email)}</td>
                     <td>${perfilFormatado}</td>
                     <td>${ministeriosUsuario.length}</td>
                     <td>
@@ -400,15 +387,15 @@
             
             // Configurar eventos dos botões
             document.querySelectorAll('.ver-usuario').forEach(btn => {
-                btn.addEventListener('click', () => verDetalhesUsuario(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => verDetalhesUsuario(btn.dataset.id));
             });
             
             document.querySelectorAll('.editar-usuario').forEach(btn => {
-                btn.addEventListener('click', () => editarUsuario(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => editarUsuario(btn.dataset.id));
             });
             
             document.querySelectorAll('.excluir-usuario').forEach(btn => {
-                btn.addEventListener('click', () => excluirUsuario(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => excluirUsuario(btn.dataset.id));
             });
         }
         
@@ -434,15 +421,29 @@
                         break;
                 }
                 
+                // Formatar data de expiração
+                let expiraFormatado = 'Sem expiração';
+                if (codigo.dataExpiracao) {
+                    const hoje = new Date().toISOString().split('T')[0];
+                    const expirado = codigo.dataExpiracao < hoje;
+                    expiraFormatado = formatarData(codigo.dataExpiracao);
+                    if (expirado) expiraFormatado = `<span class="text-danger">${expiraFormatado} (expirado)</span>`;
+                }
+
+                // Usos restantes
+                const usosRestantes = codigo.usosRestantes !== undefined ? codigo.usosRestantes : (codigo.usosMaximo - codigo.usosRealizados);
+                const usosClass = usosRestantes <= 0 ? 'text-danger' : 'text-success';
+                const usosTexto = `<span class="${usosClass}">${usosRestantes}</span> / ${codigo.usosMaximo}`;
+                
                 const row = document.createElement('tr');
                 
                 row.innerHTML = `
                     <td><strong>${codigo.codigo}</strong></td>
                     <td>${perfilFormatado}</td>
-                    <td>${formatarData(codigo.dataExpiracao)}</td>
-                    <td>${codigo.usosRestantes}</td>
+                    <td>${expiraFormatado}</td>
+                    <td>${usosTexto}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-danger excluir-codigo" data-codigo="${codigo.codigo}">
+                        <button class="btn btn-sm btn-outline-danger excluir-codigo" data-id="${codigo.id}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -453,7 +454,7 @@
             
             // Configurar eventos dos botões
             document.querySelectorAll('.excluir-codigo').forEach(btn => {
-                btn.addEventListener('click', () => excluirCodigoConvite(btn.dataset.codigo));
+                btn.addEventListener('click', () => excluirCodigoConvite(btn.dataset.id));
             });
         }
         
@@ -480,7 +481,7 @@
         
         // Função para ver detalhes do usuário
         async function verDetalhesUsuario(id) {
-            const usuario = usuarios.find(u => u.id === id);
+            const usuario = usuarios.find(u => String(u.id) === String(id));
             
             if (!usuario) return;
             
@@ -564,7 +565,7 @@
         
         // Função para editar usuário
         function editarUsuario(id) {
-            const usuario = usuarios.find(u => u.id === id);
+            const usuario = usuarios.find(u => String(u.id) === String(id));
             
             if (!usuario) return;
             
@@ -649,7 +650,7 @@
         
         // Função para excluir usuário
         async function excluirUsuario(id) {
-            const usuario = usuarios.find(u => u.id === id);
+            const usuario = usuarios.find(u => String(u.id) === String(id));
             
             if (!usuario) return;
             
@@ -667,7 +668,7 @@
                 await fetchAPI(`usuarios/${id}`, 'DELETE');
                 
                 // Remover da lista local
-                usuarios = usuarios.filter(u => u.id !== id);
+                usuarios = usuarios.filter(u => String(u.id) !== String(id));
                 
                 atualizarListaUsuarios();
                 
@@ -680,54 +681,59 @@
         }
         
         // Função para gerar código de convite
-        function gerarCodigoConvite() {
+        async function gerarCodigoConvite() {
             const perfil = document.getElementById('codigo-perfil').value;
             const dataExpiracao = document.getElementById('codigo-expiracao').value;
-            const usosRestantes = parseInt(document.getElementById('codigo-usos').value);
+            const usosMaximo = parseInt(document.getElementById('codigo-usos').value) || 1;
             
-            if (!perfil || !dataExpiracao || !usosRestantes) {
-                alert('Por favor, preencha todos os campos.');
+            if (!perfil) {
+                alert('Por favor, selecione um perfil.');
                 return;
             }
             
-            // Gerar código aleatório
-            const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let codigo = '';
-            for (let i = 0; i < 8; i++) {
-                codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            if (!dataExpiracao) {
+                alert('Por favor, defina uma data de expiração.');
+                return;
             }
             
-            // Adicionar à lista de códigos
-            codigosConvite.push({
-                codigo,
-                perfil,
-                dataExpiracao,
-                usosRestantes
-            });
-            
-            // Fechar modal e atualizar lista
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalCodigo'));
-            modal.hide();
-            
-            atualizarListaCodigos();
-            
-            // Mostrar mensagem com o código
-            alert(`Código de convite gerado com sucesso: ${codigo}`);
+            try {
+                const novoCodigo = await fetchAPI('codigos-convite', 'POST', { perfil, dataExpiracao, usosMaximo });
+                
+                // Adicionar à lista local
+                codigosConvite.unshift(novoCodigo);
+                
+                // Fechar modal e atualizar lista
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalCodigo'));
+                modal.hide();
+                
+                atualizarListaCodigos();
+                
+                // Mostrar mensagem com o código
+                alert(`Código de convite gerado com sucesso!\n\nCódigo: ${novoCodigo.codigo}\n\nCompartilhe este código com a pessoa que deseja convidar.`);
+            } catch (error) {
+                console.error('Erro ao gerar código:', error);
+                alert('Erro ao gerar código de convite. Tente novamente.');
+            }
         }
         
         // Função para excluir código de convite
-        function excluirCodigoConvite(codigo) {
-            if (!confirm(`Tem certeza que deseja excluir o código de convite ${codigo}? Esta ação não pode ser desfeita.`)) {
+        async function excluirCodigoConvite(id) {
+            if (!confirm('Tem certeza que deseja excluir este código de convite? Esta ação não pode ser desfeita.')) {
                 return;
             }
             
-            // Remover da lista local
-            codigosConvite = codigosConvite.filter(c => c.codigo !== codigo);
-            
-            atualizarListaCodigos();
-            
-            // Mostrar mensagem de sucesso
-            alert('Código de convite excluído com sucesso!');
+            try {
+                await fetchAPI(`codigos-convite/${id}`, 'DELETE');
+                
+                // Remover da lista local
+                codigosConvite = codigosConvite.filter(c => String(c.id) !== String(id));
+                
+                atualizarListaCodigos();
+                alert('Código de convite excluído com sucesso!');
+            } catch (error) {
+                console.error('Erro ao excluir código:', error);
+                alert('Erro ao excluir o código de convite. Tente novamente.');
+            }
         }
     </script>
 </body>

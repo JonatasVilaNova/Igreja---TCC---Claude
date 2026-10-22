@@ -1,251 +1,145 @@
-// Rotas para gestão de conteúdos
+/**
+ * conteudos.js — CRUD de Conteúdos (biblioteca central)
+ * Usa Supabase como banco de dados.
+ */
 const express = require('express');
 const router = express.Router();
-const db = require('../utils/db');
 const { verificarToken, verificarPermissao } = require('./auth');
+const { getClient } = require('./utils/db');
 
-// Listar todos os conteúdos
+// Helper
+function mapConteudo(c) {
+    return {
+        id: c.id,
+        idMinisterio: c.id_ministerio,
+        titulo: c.titulo,
+        linkArquivo: c.link_arquivo,
+        dataPublicacao: c.data_publicacao,
+        nomeMinisterio: c.ministerios ? c.ministerios.nome : undefined,
+        created_at: c.created_at
+    };
+}
+
+// GET /api/conteudos — listar todos
 router.get('/', verificarToken, async (req, res) => {
-  try {
-    const query = `
-      SELECT c.id, c.idMinisterio, c.titulo, c.linkArquivo, c.dataPublicacao,
-             m.nome as nomeMinisterio
-      FROM Conteudos c
-      JOIN Ministerios m ON c.idMinisterio = m.id
-      ORDER BY c.dataPublicacao DESC
-    `;
-    
-    const conteudos = await db.executeQuery(query);
-    res.status(200).json(conteudos);
-  } catch (error) {
-    console.error('Erro ao listar conteúdos:', error);
-    res.status(500).json({ error: 'Erro ao listar conteúdos.' });
-  }
-});
+    try {
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('conteudos')
+            .select('*, ministerios(nome)')
+            .order('data_publicacao', { ascending: false });
 
-// Obter um conteúdo específico
-router.get('/:id', verificarToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const query = `
-      SELECT c.id, c.idMinisterio, c.titulo, c.linkArquivo, c.dataPublicacao,
-             m.nome as nomeMinisterio
-      FROM Conteudos c
-      JOIN Ministerios m ON c.idMinisterio = m.id
-      WHERE c.id = @param0
-    `;
-    
-    const conteudos = await db.executeQuery(query, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (conteudos.length === 0) {
-      return res.status(404).json({ error: 'Conteúdo não encontrado.' });
+        if (error) throw error;
+        res.json(data.map(mapConteudo));
+    } catch (err) {
+        console.error('Erro ao listar conteúdos:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    res.status(200).json(conteudos[0]);
-  } catch (error) {
-    console.error('Erro ao obter conteúdo:', error);
-    res.status(500).json({ error: 'Erro ao obter conteúdo.' });
-  }
 });
 
-// Listar conteúdos de um ministério específico
+// GET /api/conteudos/ministerio/:idMinisterio
 router.get('/ministerio/:idMinisterio', verificarToken, async (req, res) => {
-  try {
-    const { idMinisterio } = req.params;
-    
-    const query = `
-      SELECT c.id, c.idMinisterio, c.titulo, c.linkArquivo, c.dataPublicacao,
-             m.nome as nomeMinisterio
-      FROM Conteudos c
-      JOIN Ministerios m ON c.idMinisterio = m.id
-      WHERE c.idMinisterio = @param0
-      ORDER BY c.dataPublicacao DESC
-    `;
-    
-    const conteudos = await db.executeQuery(query, [
-      { placeholder: '@param0', value: parseInt(idMinisterio) }
-    ]);
-    
-    res.status(200).json(conteudos);
-  } catch (error) {
-    console.error('Erro ao listar conteúdos do ministério:', error);
-    res.status(500).json({ error: 'Erro ao listar conteúdos do ministério.' });
-  }
+    try {
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('conteudos')
+            .select('*, ministerios(nome)')
+            .eq('id_ministerio', req.params.idMinisterio)
+            .order('data_publicacao', { ascending: false });
+
+        if (error) throw error;
+        res.json(data.map(mapConteudo));
+    } catch (err) {
+        console.error('Erro ao listar conteúdos do ministério:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
 });
 
-// Criar um novo conteúdo (apenas para admin ou pastor)
-router.post('/', verificarToken, verificarPermissao('admin'), async (req, res) => {
-  try {
-    const { idMinisterio, titulo, linkArquivo, dataPublicacao } = req.body;
-    
-    if (!idMinisterio || !titulo || !linkArquivo || !dataPublicacao) {
-      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+// GET /api/conteudos/:id
+router.get('/:id', verificarToken, async (req, res) => {
+    try {
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('conteudos')
+            .select('*, ministerios(nome)')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error) throw error;
+        if (!data) return res.status(404).json({ error: 'Conteúdo não encontrado' });
+
+        res.json(mapConteudo(data));
+    } catch (err) {
+        console.error('Erro ao obter conteúdo:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    // Verificar se o ministério existe
-    const queryVerificarMinisterio = `
-      SELECT COUNT(*) as count
-      FROM Ministerios
-      WHERE id = @param0
-    `;
-    
-    const resultadoMinisterio = await db.executeQuery(queryVerificarMinisterio, [
-      { placeholder: '@param0', value: idMinisterio }
-    ]);
-    
-    if (resultadoMinisterio[0].count === 0) {
-      return res.status(400).json({ error: 'Ministério não encontrado.' });
-    }
-    
-    // Inserir novo conteúdo
-    const queryInserir = `
-      INSERT INTO Conteudos (idMinisterio, titulo, linkArquivo, dataPublicacao)
-      VALUES (@param0, @param1, @param2, @param3);
-      SELECT SCOPE_IDENTITY() as id;
-    `;
-    
-    const resultadoInsercao = await db.executeQuery(queryInserir, [
-      { placeholder: '@param0', value: idMinisterio },
-      { placeholder: '@param1', value: titulo },
-      { placeholder: '@param2', value: linkArquivo },
-      { placeholder: '@param3', value: dataPublicacao }
-    ]);
-    
-    const id = resultadoInsercao[0].id;
-    
-    // Obter informações completas do conteúdo
-    const queryObterConteudo = `
-      SELECT c.id, c.idMinisterio, c.titulo, c.linkArquivo, c.dataPublicacao,
-             m.nome as nomeMinisterio
-      FROM Conteudos c
-      JOIN Ministerios m ON c.idMinisterio = m.id
-      WHERE c.id = @param0
-    `;
-    
-    const conteudos = await db.executeQuery(queryObterConteudo, [
-      { placeholder: '@param0', value: id }
-    ]);
-    
-    res.status(201).json(conteudos[0]);
-  } catch (error) {
-    console.error('Erro ao criar conteúdo:', error);
-    res.status(500).json({ error: 'Erro ao criar conteúdo.' });
-  }
 });
 
-// Atualizar um conteúdo (apenas para admin ou pastor)
-router.put('/:id', verificarToken, verificarPermissao('admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { idMinisterio, titulo, linkArquivo, dataPublicacao } = req.body;
-    
-    if (!idMinisterio || !titulo || !linkArquivo || !dataPublicacao) {
-      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+// POST /api/conteudos — criar (Admin+)
+router.post('/', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const { idMinisterio, titulo, linkArquivo, dataPublicacao } = req.body;
+        if (!idMinisterio || !titulo || !linkArquivo) {
+            return res.status(400).json({ error: 'idMinisterio, titulo e linkArquivo são obrigatórios' });
+        }
+
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('conteudos')
+            .insert({
+                id_ministerio: idMinisterio,
+                titulo,
+                link_arquivo: linkArquivo,
+                data_publicacao: dataPublicacao || new Date().toISOString().split('T')[0]
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.status(201).json(mapConteudo(data));
+    } catch (err) {
+        console.error('Erro ao criar conteúdo:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    // Verificar se o conteúdo existe
-    const queryVerificar = `
-      SELECT *
-      FROM Conteudos
-      WHERE id = @param0
-    `;
-    
-    const conteudos = await db.executeQuery(queryVerificar, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (conteudos.length === 0) {
-      return res.status(404).json({ error: 'Conteúdo não encontrado.' });
-    }
-    
-    // Verificar se o ministério existe
-    const queryVerificarMinisterio = `
-      SELECT COUNT(*) as count
-      FROM Ministerios
-      WHERE id = @param0
-    `;
-    
-    const resultadoMinisterio = await db.executeQuery(queryVerificarMinisterio, [
-      { placeholder: '@param0', value: idMinisterio }
-    ]);
-    
-    if (resultadoMinisterio[0].count === 0) {
-      return res.status(400).json({ error: 'Ministério não encontrado.' });
-    }
-    
-    // Atualizar conteúdo
-    const queryAtualizar = `
-      UPDATE Conteudos
-      SET idMinisterio = @param0, titulo = @param1, linkArquivo = @param2, dataPublicacao = @param3
-      WHERE id = @param4
-    `;
-    
-    await db.executeQuery(queryAtualizar, [
-      { placeholder: '@param0', value: idMinisterio },
-      { placeholder: '@param1', value: titulo },
-      { placeholder: '@param2', value: linkArquivo },
-      { placeholder: '@param3', value: dataPublicacao },
-      { placeholder: '@param4', value: parseInt(id) }
-    ]);
-    
-    // Obter conteúdo atualizado
-    const queryObterAtualizado = `
-      SELECT c.id, c.idMinisterio, c.titulo, c.linkArquivo, c.dataPublicacao,
-             m.nome as nomeMinisterio
-      FROM Conteudos c
-      JOIN Ministerios m ON c.idMinisterio = m.id
-      WHERE c.id = @param0
-    `;
-    
-    const conteudosAtualizados = await db.executeQuery(queryObterAtualizado, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    res.status(200).json(conteudosAtualizados[0]);
-  } catch (error) {
-    console.error('Erro ao atualizar conteúdo:', error);
-    res.status(500).json({ error: 'Erro ao atualizar conteúdo.' });
-  }
 });
 
-// Excluir um conteúdo (apenas para admin ou pastor)
-router.delete('/:id', verificarToken, verificarPermissao('admin'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Verificar se o conteúdo existe
-    const queryVerificar = `
-      SELECT *
-      FROM Conteudos
-      WHERE id = @param0
-    `;
-    
-    const conteudos = await db.executeQuery(queryVerificar, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    if (conteudos.length === 0) {
-      return res.status(404).json({ error: 'Conteúdo não encontrado.' });
+// PUT /api/conteudos/:id — atualizar (Admin+)
+router.put('/:id', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const { titulo, linkArquivo, dataPublicacao, idMinisterio } = req.body;
+        const updateData = {};
+        if (titulo) updateData.titulo = titulo;
+        if (linkArquivo) updateData.link_arquivo = linkArquivo;
+        if (dataPublicacao) updateData.data_publicacao = dataPublicacao;
+        if (idMinisterio) updateData.id_ministerio = idMinisterio;
+
+        const supabase = getClient();
+        const { data, error } = await supabase
+            .from('conteudos')
+            .update(updateData)
+            .eq('id', req.params.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json(mapConteudo(data));
+    } catch (err) {
+        console.error('Erro ao atualizar conteúdo:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-    
-    // Excluir o conteúdo
-    const queryExcluir = `
-      DELETE FROM Conteudos
-      WHERE id = @param0
-    `;
-    
-    await db.executeQuery(queryExcluir, [
-      { placeholder: '@param0', value: parseInt(id) }
-    ]);
-    
-    res.status(200).json({ message: 'Conteúdo excluído com sucesso.' });
-  } catch (error) {
-    console.error('Erro ao excluir conteúdo:', error);
-    res.status(500).json({ error: 'Erro ao excluir conteúdo.' });
-  }
+});
+
+// DELETE /api/conteudos/:id — excluir (Admin+)
+router.delete('/:id', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
+    try {
+        const supabase = getClient();
+        const { error } = await supabase.from('conteudos').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ message: 'Conteúdo excluído com sucesso' });
+    } catch (err) {
+        console.error('Erro ao excluir conteúdo:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
 });
 
 module.exports = router;

@@ -24,7 +24,7 @@ window.IGREJA_CONFIG = {
      * true  → usa dados simulados (mock) — não precisa de backend.
      * false → faz chamadas reais à sua API (configure API_BASE abaixo).
      */
-    USE_MOCK: true,
+    USE_MOCK: false,
 
 
     // ----------------------------------------------------------
@@ -67,26 +67,22 @@ window.IGREJA_CONFIG = {
      * Acesse seu canal → URL do tipo youtube.com/channel/UC...
      *  → PREENCHER com o ID real do canal da sua igreja.
      */
-    YOUTUBE_CHANNEL_ID: 'UCIgrejaBatistadeNovaCintra',
+    YOUTUBE_CHANNEL_ID: 'UCZ1LQagkyoyTyK4mvEmFO8A',
 
     /**
      * URL pública do canal (usada no botão "Abrir no YouTube").
-     * Pode ser a URL customizada do canal (youtube.com/@SuaIgreja)
-     * ou a URL padrão (youtube.com/channel/UC...).
      */
-    YOUTUBE_CHANNEL_URL: 'https://www.youtube.com/c/IgrejaBatistadeNovaCintra',
+    YOUTUBE_CHANNEL_URL: 'https://www.youtube.com/@ibnovacintra',
 
     /**
      * URL da transmissão ao vivo.
-     * Geralmente é a URL do canal + /live.
      */
-    YOUTUBE_LIVE_URL: 'https://www.youtube.com/c/IgrejaBatistadeNovaCintra/live',
+    YOUTUBE_LIVE_URL: 'https://www.youtube.com/@ibnovacintra/live',
 
     /**
      * Texto exibido quando não há transmissão ao vivo.
-     * Ex.: 'Domingo, 18/05/2025 às 10:00'
      */
-    PROXIMA_TRANSMISSAO: 'Domingo, 31/05/2025 às 10:00',
+    PROXIMA_TRANSMISSAO: 'Domingos às 19:00',
 
 
     // ----------------------------------------------------------
@@ -95,12 +91,19 @@ window.IGREJA_CONFIG = {
 
     /**
      * Tradução padrão ao abrir a página da Bíblia.
-     * Opções disponíveis via bible-api.com (gratuito, sem chave):
-     *   'almeida'  → João Ferreira de Almeida (Português)
-     *   'kjv'      → King James Version (Inglês)
-     *   'web'      → World English Bible (Inglês)
+     * Opções:
+     *   'nvi'      → Nova Versão Internacional (via ABíbliaDigital)
+     *   'almeida'  → João Ferreira de Almeida (via bible-api.com)
+     *   'kjv'      → King James Version (via bible-api.com)
      */
-    BIBLIA_TRADUCAO_PADRAO: 'almeida',
+    BIBLIA_TRADUCAO_PADRAO: 'nvi',
+
+    /**
+     * Token de autenticação da ABíbliaDigital.
+     * Cadastre-se gratuitamente em https://www.abibliadigital.com.br
+     * para obter seu token. Necessário para a versão NVI.
+     */
+    ABIBLIADIGITAL_TOKEN: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdHIiOiJTdW4gQXByIDI2IDIwMjYgMDA6MjU6MzQgR01UKzAwMDAuam9uYXRhcy5hbG1laWRhMTlAaG90bWFpbC5jb20iLCJpYXQiOjE3NzcxNjMxMzR9.RQlqlN9jsX2PRgjWc1AZnQI5uQnKg9t4Unym0m4UHHo',
 
 
     // ----------------------------------------------------------
