@@ -19,6 +19,40 @@ function mapEscala(e) {
     };
 }
 
+// Valida a lista de participantes: undefined = não informada; false = inválida.
+// Remove repetições, que antes faziam a escala perder todos os participantes.
+function normalizarMembros(membros) {
+    if (membros === undefined || membros === null) return undefined;
+    if (!Array.isArray(membros)) return false;
+    const ids = membros.map(m => parseInt(m));
+    if (ids.some(isNaN)) return false;
+    return [...new Set(ids)];
+}
+
+// Converte os erros levantados pela função salvar_escala em respostas claras
+function responderErroEscala(res, error) {
+    const msg = (error && error.message) || '';
+    if (msg.includes('ESCALA_NAO_ENCONTRADA')) return res.status(404).json({ error: 'Escala não encontrada' });
+    if (msg.includes('MEMBRO_INVALIDO')) {
+        return res.status(400).json({ error: 'Há participantes inexistentes ou de outro ministério' });
+    }
+    if (error && (error.code === '23503' || error.code === '22007' || error.code === '22008')) {
+        return res.status(400).json({ error: 'Ministério ou data inválidos' });
+    }
+    console.error('Erro ao salvar escala:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor' });
+}
+
+async function carregarEscala(supabase, id) {
+    const { data, error } = await supabase
+        .from('escalas')
+        .select('*, escalas_membros(id_membro)')
+        .eq('id', id)
+        .single();
+    if (error) throw error;
+    return mapEscala(data);
+}
+
 // ════════════════════════════════════════════
 // ESCALAS
 // ════════════════════════════════════════════
@@ -111,31 +145,23 @@ router.post('/', verificarToken, verificarPermissao('pastor', 'admin'), async (r
         if (!idMinisterio || !data || !descricao) {
             return res.status(400).json({ error: 'idMinisterio, data e descricao são obrigatórios' });
         }
-
-        const supabase = getClient();
-
-        // Criar escala
-        const { data: escala, error: errEscala } = await supabase
-            .from('escalas')
-            .insert({ id_ministerio: idMinisterio, data, descricao })
-            .select()
-            .single();
-
-        if (errEscala) throw errEscala;
-
-        // Associar membros
-        if (membros && membros.length > 0) {
-            const relacoes = membros.map(idMembro => ({
-                id_escala: escala.id,
-                id_membro: idMembro
-            }));
-            const { error: errMembros } = await supabase
-                .from('escalas_membros')
-                .insert(relacoes);
-            if (errMembros) throw errMembros;
+        const lista = normalizarMembros(membros);
+        if (lista === false) {
+            return res.status(400).json({ error: 'membros deve ser uma lista de identificadores numéricos' });
         }
 
-        res.status(201).json(mapEscala({ ...escala, escalas_membros: (membros || []).map(id => ({ id_membro: id })) }));
+        // Escala e participantes gravados em uma única transação (migração 005)
+        const supabase = getClient();
+        const { data: idEscala, error } = await supabase.rpc('salvar_escala', {
+            p_id: null,
+            p_id_ministerio: parseInt(idMinisterio),
+            p_data: data,
+            p_descricao: descricao,
+            p_membros: lista || []
+        });
+        if (error) return responderErroEscala(res, error);
+
+        res.status(201).json(await carregarEscala(supabase, idEscala));
     } catch (err) {
         console.error('Erro ao criar escala:', err);
         res.status(500).json({ error: 'Erro interno do servidor' });
@@ -145,43 +171,28 @@ router.post('/', verificarToken, verificarPermissao('pastor', 'admin'), async (r
 // PUT /api/escalas/:id — atualizar (Admin+)
 router.put('/:id', verificarToken, verificarPermissao('pastor', 'admin'), async (req, res) => {
     try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+
         const { idMinisterio, data, descricao, membros } = req.body;
-        const updateData = {};
-        if (idMinisterio) updateData.id_ministerio = idMinisterio;
-        if (data) updateData.data = data;
-        if (descricao) updateData.descricao = descricao;
-
-        const supabase = getClient();
-
-        const { data: escala, error: errEscala } = await supabase
-            .from('escalas')
-            .update(updateData)
-            .eq('id', req.params.id)
-            .select()
-            .single();
-
-        if (errEscala) throw errEscala;
-
-        // Atualizar membros: remover todos e reinserir
-        if (membros !== undefined) {
-            await supabase.from('escalas_membros').delete().eq('id_escala', req.params.id);
-            if (membros.length > 0) {
-                const relacoes = membros.map(idMembro => ({
-                    id_escala: parseInt(req.params.id),
-                    id_membro: idMembro
-                }));
-                await supabase.from('escalas_membros').insert(relacoes);
-            }
+        const lista = normalizarMembros(membros);
+        if (lista === false) {
+            return res.status(400).json({ error: 'membros deve ser uma lista de identificadores numéricos' });
         }
 
-        // Recarregar com membros
-        const { data: escalaFinal } = await supabase
-            .from('escalas')
-            .select('*, escalas_membros(id_membro)')
-            .eq('id', req.params.id)
-            .single();
+        // Atualização e substituição dos participantes na mesma transação:
+        // se a nova lista falhar, os participantes anteriores são preservados.
+        const supabase = getClient();
+        const { error } = await supabase.rpc('salvar_escala', {
+            p_id: id,
+            p_id_ministerio: idMinisterio ? parseInt(idMinisterio) : null,
+            p_data: data || null,
+            p_descricao: descricao || null,
+            p_membros: lista === undefined ? null : lista
+        });
+        if (error) return responderErroEscala(res, error);
 
-        res.json(mapEscala(escalaFinal));
+        res.json(await carregarEscala(supabase, id));
     } catch (err) {
         console.error('Erro ao atualizar escala:', err);
         res.status(500).json({ error: 'Erro interno do servidor' });
