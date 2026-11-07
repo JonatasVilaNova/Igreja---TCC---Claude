@@ -236,7 +236,11 @@
                     atualizarTabelaEscalas();
                 });
                 
-                document.getElementById('escala-ministerio').addEventListener('change', carregarMembrosMinisterio);
+                document.getElementById('escala-ministerio').addEventListener('change', function() {
+                    // Participantes pertencem a um ministério: a seleção anterior não vale para o novo
+                    membrosSelecionados = [];
+                    carregarMembrosMinisterio();
+                });
                 document.getElementById('btn-salvar-escala').addEventListener('click', salvarEscala);
                 
                 // Resetar formulário quando o modal for fechado
